@@ -1,0 +1,12 @@
+exceptiongroup>=1.2.2
+iniconfig>=2.0.0
+numpy>=1.26.0,<2
+opencv-python>=4.8.1,<5
+packaging>=24.0
+pluggy>=1.5.0
+PyQt6>=6.6.0,<7
+PyQt6-Qt6>=6.6.0,<7
+PyQt6_sip>=13.5.0,<14
+pytest>=7.4.0,<8
+pytest-qt>=4.4.0
+tomli>=2.0.1,<3
