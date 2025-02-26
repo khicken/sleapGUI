@@ -2,24 +2,23 @@
 GUI application that automates specified commands for SLEAP.
 
 ## Installation
-### Conda
-This
+This package is meant to installed in the **sleap** conda environment (see https://sleap.ai/installation.html).
 ```sh
-conda install sleapgui-c
+conda install sleapgui
 ```
 
 ## Usage
-To launch the application, open the executable or if installed through `pip` run:
+To launch the application, in the sleap conda environment run:
 ```sh
-mediagui
+sleapgui
 ```
 
 ## Compatibility
 | Platform | Python Version |
 |----------|----------------|
-| Windows  | 3.10 |
-| macOS    | 3.10 |
-| Linux    | 3.10 |
+| Windows  | 3.7 |
+| macOS    | 3.7 |
+| Linux    | 3.7 |
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
