@@ -1,0 +1,1 @@
+uh just recreate sleap environment in python 3.7 and install pyqt5, that's all that's needed lmao
