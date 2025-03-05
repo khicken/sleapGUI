@@ -1,0 +1,117 @@
+absl-py==2.1.0
+albumentations @ file:///home/conda/feedstock_root/build_artifacts/albumentations_1686576355052/work
+astunparse==1.6.3
+attrs @ file:///home/conda/feedstock_root/build_artifacts/attrs_1640799537051/work
+backports.zoneinfo==0.2.1
+cached-property @ file:///home/conda/feedstock_root/build_artifacts/cached_property_1615209429212/work
+cachetools==5.3.3
+cattrs @ file:///home/conda/feedstock_root/build_artifacts/cattrs_1604136207372/work
+certifi @ file:///home/conda/feedstock_root/build_artifacts/certifi_1725278078093/work/certifi
+charset-normalizer==3.3.2
+cloudpickle @ file:///home/conda/feedstock_root/build_artifacts/cloudpickle_1674202310934/work
+cycler @ file:///home/conda/feedstock_root/build_artifacts/cycler_1635519461629/work
+cytoolz @ file:///D:/bld/cytoolz_1657553564801/work
+dask @ file:///home/conda/feedstock_root/build_artifacts/dask-core_1644602974678/work
+efficientnet==1.0.0
+flatbuffers==2.0.7
+fonttools @ file:///D:/bld/fonttools_1666390069478/work
+fsspec @ file:///home/conda/feedstock_root/build_artifacts/fsspec_1674184942191/work
+gast==0.4.0
+google-auth==2.29.0
+google-auth-oauthlib==0.4.6
+google-pasta==0.2.0
+grpcio==1.62.1
+h5py @ file:///D:/bld/h5py_1660488229817/work
+hdmf @ file:///home/conda/feedstock_root/build_artifacts/hdmf_1684510272253/work
+idna==3.6
+image-classifiers==1.0.0
+imagecodecs-lite @ file:///D:/bld/imagecodecs-lite_1665171421509/work
+imageio @ file:///home/conda/feedstock_root/build_artifacts/imageio_1729190692267/work
+imgstore==0.2.9
+importlib-metadata @ file:///D:/bld/importlib-metadata_1653252990345/work
+importlib-resources @ file:///home/conda/feedstock_root/build_artifacts/importlib_resources_1688813467203/work
+joblib @ file:///home/conda/feedstock_root/build_artifacts/joblib_1691577114857/work
+jsmin @ file:///home/conda/feedstock_root/build_artifacts/jsmin_1642532731678/work
+jsonpickle==1.2
+jsonschema @ file:///home/conda/feedstock_root/build_artifacts/jsonschema-meta_1669810440410/work
+keras==2.7.0
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.2
+kiwisolver @ file:///D:/bld/kiwisolver_1657953189205/work
+libclang==18.1.1
+locket @ file:///home/conda/feedstock_root/build_artifacts/locket_1650660393415/work
+Markdown==3.4.4
+markdown-it-py @ file:///home/conda/feedstock_root/build_artifacts/markdown-it-py_1677100944732/work
+MarkupSafe==2.1.5
+matplotlib @ file:///D:/bld/matplotlib-suite_1661439973878/work
+mdurl @ file:///home/conda/feedstock_root/build_artifacts/mdurl_1704317613764/work
+munkres==1.1.4
+ndx-pose @ file:///home/conda/feedstock_root/build_artifacts/ndx-pose_1706810229855/work
+networkx @ file:///home/conda/feedstock_root/build_artifacts/networkx_1646092782768/work
+nixio==1.5.3
+numpy @ file:///D:/bld/numpy_1649806536290/work
+oauthlib==3.2.2
+opencv-python==4.5.5
+opt-einsum==3.3.0
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1696202382185/work
+pandas @ file:///D:/bld/pandas_1639398349358/work
+partd @ file:///home/conda/feedstock_root/build_artifacts/partd_1695667515973/work
+patsy @ file:///home/conda/feedstock_root/build_artifacts/patsy_1704469236901/work
+Pillow @ file:///D:/bld/pillow_1660386017560/work
+pkgutil_resolve_name @ file:///home/conda/feedstock_root/build_artifacts/pkgutil-resolve-name_1694617248815/work
+protobuf==3.20.3
+psutil @ file:///D:/bld/psutil_1666155596250/work
+pyasn1==0.5.1
+pyasn1-modules==0.3.0
+Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1700607939962/work
+pykalman @ file:///home/conda/feedstock_root/build_artifacts/pykalman_1711547707628/work
+pynwb @ file:///D:/bld/pynwb_1666675233939/work
+pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1724616129934/work
+PyQt5==5.12.3
+PyQt5_sip==4.19.18
+PyQtChart==5.12
+PyQtWebEngine==5.12.1
+pyrsistent @ file:///D:/bld/pyrsistent_1649013563648/work
+python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1709299778482/work
+python-rapidjson @ file:///D:/bld/python-rapidjson_1666000124084/work
+pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1726055524169/work
+PyWavelets @ file:///D:/bld/pywavelets_1649616556601/work
+PyYAML @ file:///D:/bld/pyyaml_1648757357341/work
+pyzmq @ file:///D:/bld/pyzmq_1663830622471/work
+qimage2ndarray==1.10.0
+QtPy @ file:///home/conda/feedstock_root/build_artifacts/qtpy_1730763764885/work
+qudida @ file:///home/conda/feedstock_root/build_artifacts/qudida_1651101164121/work
+requests==2.31.0
+requests-oauthlib==2.0.0
+rich @ file:///home/conda/feedstock_root/build_artifacts/rich_1726066019428/work/dist
+rsa==4.9
+ruamel.yaml @ file:///D:/bld/ruamel.yaml_1649033375933/work
+ruamel.yaml.clib @ file:///D:/bld/ruamel.yaml.clib_1649013254928/work
+scikit-image @ file:///D:/bld/scikit-image_1645196912385/work
+scikit-learn @ file:///D:/bld/scikit-learn_1632611530541/work
+scikit-video==1.1.11
+scipy @ file:///C:/bld/scipy_1637806996411/work
+seaborn @ file:///home/conda/feedstock_root/build_artifacts/seaborn-split_1672497695270/work
+segmentation-models==1.0.1
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+sleap==1.4.1a2
+statsmodels @ file:///D:/bld/statsmodels_1654787262041/work
+tensorboard==2.11.2
+tensorboard-data-server==0.6.1
+tensorboard-plugin-wit==1.8.1
+tensorflow==2.7.0
+tensorflow-estimator==2.7.0
+tensorflow-hub @ file:///home/conda/feedstock_root/build_artifacts/tensorflow-hub_1618768305670/work/wheel_dir/tensorflow_hub-0.12.0-py2.py3-none-any.whl
+tensorflow-io-gcs-filesystem==0.31.0
+termcolor==2.3.0
+threadpoolctl @ file:///home/conda/feedstock_root/build_artifacts/threadpoolctl_1643647933166/work
+tifffile @ file:///home/conda/feedstock_root/build_artifacts/tifffile_1591280222285/work
+toolz @ file:///home/conda/feedstock_root/build_artifacts/toolz_1706112571092/work
+typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1688315532570/work
+tzdata==2024.1
+tzlocal==5.1
+unicodedata2 @ file:///D:/bld/unicodedata2_1649112131705/work
+urllib3==2.0.7
+Werkzeug==2.2.3
+wrapt==1.16.0
+zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1677313463193/work
