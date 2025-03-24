@@ -2,15 +2,16 @@
 GUI application that automates specified commands for SLEAP.
 
 ## Installation
-First, [download](https://sleap.ai/installation.html) and activate the **sleap** conda environment.
+This application uses the same Qt bindings as SLEAP, through the QtPy compatibility layer, i.e. must be run in the SLEAP conda environment.
 
-Then, download `install.bat` under the [releases](https://github.com/khicken/sleapGUI/releases) tab. Run it in your active sleap environment.
+1. Activate the SLEAP environment:
+```conda activate sleap```
+2. Install sleapGUI:
+```pip install --no-deps git+https://github.com/khicken/sleapGUI.git```
 
 ## Usage
-To launch the application, in the sleap conda environment run:
-```sh
-sleapgui
-```
+Simply run `sleapgui` in the environment to launch the application.
+
 There are currently two types of analysis: `face` and `pupil`.
 
 The default analysis is for `face`. For pupil analysis, run `sleapgui pupil`.
