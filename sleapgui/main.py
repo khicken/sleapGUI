@@ -3,9 +3,17 @@ import sys, argparse
 import os
 import json
 from datetime import datetime
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QHBoxLayout, 
-                             QFileDialog, QLabel, QLineEdit, QWidget, QGroupBox, 
-                             QGridLayout, QTextEdit, QSpinBox, QProgressBar, QMessageBox, QComboBox)
+# you a qtpy
+try:
+    import qtpy
+    print(f"Using QtPy version: {qtpy.__version__}")
+except (ImportError, AttributeError):
+    print("Warning: QtPy version information not available")
+from qtpy.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QHBoxLayout, 
+                           QFileDialog, QLabel, QLineEdit, QWidget, QGroupBox, 
+                           QGridLayout, QTextEdit, QSpinBox, QProgressBar, QMessageBox, QComboBox)
+from qtpy.QtCore import QThread, Signal, Qt, QRect, QRectF
+from qtpy.QtGui import QIcon, QPixmap
 import sleap
 
 try:

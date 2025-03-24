@@ -1,6 +1,6 @@
 import os
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
-from PyQt5.QtWidgets import QTextEdit
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QTextEdit
 
 class DragDropTextEdit(QTextEdit):
     def __init__(self, parent=None):
@@ -8,7 +8,7 @@ class DragDropTextEdit(QTextEdit):
         self.setAcceptDrops(True)
         self.parent = parent
     
-    def dragEnterEvent(self, event: QDragEnterEvent):
+    def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
@@ -20,7 +20,7 @@ class DragDropTextEdit(QTextEdit):
         else:
             super().dragMoveEvent(event)
     
-    def dropEvent(self, event: QDropEvent):
+    def dropEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
             urls = event.mimeData().urls()

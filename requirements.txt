@@ -67,10 +67,6 @@ Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1700607939
 pykalman @ file:///home/conda/feedstock_root/build_artifacts/pykalman_1711547707628/work
 pynwb @ file:///D:/bld/pynwb_1666675233939/work
 pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1724616129934/work
-PyQt5==5.12.3
-PyQt5_sip==4.19.18
-PyQtChart==5.12
-PyQtWebEngine==5.12.1
 pyrsistent @ file:///D:/bld/pyrsistent_1649013563648/work
 python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1709299778482/work
 python-rapidjson @ file:///D:/bld/python-rapidjson_1666000124084/work

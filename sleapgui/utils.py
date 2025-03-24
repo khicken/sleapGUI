@@ -21,7 +21,7 @@ def get_video_framerate(log, video_path):
 
 def set_app_icon(window):
     try:
-        from PyQt5.QtGui import QIcon
+        from qtpy.QtGui import QIcon
         icon_url = "https://raw.githubusercontent.com/khicken/sleapGUI/main/assets/sleapgui.ico"
         icon_path = os.path.join(os.path.expanduser("~"), ".sleapgui", "icon.ico")
         

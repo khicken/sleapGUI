@@ -1,8 +1,22 @@
 from setuptools import setup, find_packages
+import importlib.util
+
+# Check if qtpy is already installed
+qtpy_installed = importlib.util.find_spec("qtpy") is not None
+
+# Base dependencies
+install_requires = [
+    'sleap',
+    'opencv-python',
+]
+
+# Add qtpy only if it's not already installed
+if not qtpy_installed:
+    install_requires.append('qtpy')
 
 setup(
     name='sleapgui',
-    version='0.1.0',      # PEP 440 versioning
+    version='0.1.0',
     author='Kaleb Kim',
     author_email='mail@kalebkim.com',
     description='GUI application that automates specified commands for SLEAP',
@@ -10,11 +24,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/khicken/sleapGUI',
     packages=find_packages(),
-    install_requires=[
-        'PyQt5>=5.12.3',
-        'sleap',
-        'opencv-python',
-    ],
+    install_requires=install_requires,
     entry_points={
         "console_scripts": [
             "sleapgui=sleapgui.main:main",

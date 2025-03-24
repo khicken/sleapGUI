@@ -4,7 +4,7 @@ import time
 import threading
 import queue
 import traceback
-from PyQt5.QtCore import QThread, pyqtSignal
+from qtpy.QtCore import QThread, Signal
 import sleap
 from sleap.io.format.csv import CSVAdaptor
 
@@ -14,9 +14,9 @@ if os.name != 'nt':  # For UNIX systems
     import select
 
 class Worker(QThread):
-    progress = pyqtSignal(int)
-    message = pyqtSignal(str)
-    finished = pyqtSignal(bool, str)
+    progress = Signal(int)
+    message = Signal(str)
+    finished = Signal(bool, str)
     
     def __init__(self, task, params):
         super().__init__()
