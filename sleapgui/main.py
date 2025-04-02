@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout,
                            QFileDialog, QLabel, QLineEdit, QWidget, QGroupBox, 
                            QGridLayout, QTextEdit, QSpinBox, QProgressBar, QMessageBox, QComboBox)
 from qtpy.QtCore import QThread, Signal, Qt, QRect, QRectF
-from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtGui import QIcon, QPixmap, QTextCursor
 import sleap
 
 try:
@@ -306,7 +306,6 @@ class ModelGUI(QMainWindow):
         self.analyze_data()
 
     def on_task_finished(self, success, message):
-        """Handle task completion and chain workflow operations"""
         self.enable_buttons()
         
         if success:
@@ -317,12 +316,6 @@ class ModelGUI(QMainWindow):
             if hasattr(self, 'workflow_state'):
                 current_step = self.workflow_state["current_step"]
                 self.workflow_state["steps_completed"] += 1
-                
-                if not success:
-                    self.workflow_state["success"] = False
-                    QMessageBox.warning(self, f"Workflow Error", f"Error during {current_step}: {message}")
-                    delattr(self, 'workflow_state')
-                    return
                 
                 # Move to next step
                 if current_step == "analyze":
@@ -480,17 +473,6 @@ class ModelGUI(QMainWindow):
     
     def update_progress(self, value):
         self.progress_bar.setValue(value)
-    
-    def on_task_finished(self, success, message):
-        self.enable_buttons()
-        self.progress_bar.setValue(100 if success else 0)
-        
-        if success:
-            self.log(f"Success: {message}")
-            QMessageBox.information(self, "Success", message)
-        else:
-            self.log(f"Error: {message}")
-            QMessageBox.critical(self, "Error", message)
     
     def disable_buttons(self):
         self.analyze_button.setEnabled(False)

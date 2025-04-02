@@ -157,8 +157,7 @@ class Worker(QThread):
                 # Extract video name without extension for output naming
                 video_name = os.path.splitext(os.path.basename(video_path))[0]
                 
-                # The output .slp path for this video
-                slp_output = os.path.join(output_dir, f"{video_name}_{base_name}.slp")
+                slp_output = os.path.join(output_dir, f"{base_name}.slp")
                 
                 kf_node_indices = "0,1,2,3,4,5,6,7,8,9,10,11" if mode=="face" else "0,1,2,3"
                 cmd = [
