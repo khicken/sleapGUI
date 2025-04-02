@@ -194,28 +194,39 @@ class ModelGUI(QMainWindow):
     def log(self, message):
         if message.startswith("UPDATE_LAST_LINE:"):
             # Extract the actual message
-            actual_message = message[len("UPDATE_LAST_LINE:"):]
+            actual_message = message[17:]
             
-            # Get the current text
             current_text = self.log_text.toPlainText()
-            
-            # Remove the last line
-            lines = current_text.split('\n')
-            if lines:
-                lines.pop()  # Remove the last line
+        
+            if current_text:
+                # Find the last line break
+                last_newline = current_text.rfind('\n')
                 
-            # Add the new message with timestamp
-            timestamp = datetime.now().strftime("%H:%M:%S")
-            formatted_message = f"[{timestamp}] {actual_message}"
-            
-            # Join back and set the text
-            updated_text = '\n'.join(lines) + '\n' + formatted_message
-            self.log_text.setPlainText(updated_text)
-            
-            # Move cursor to the end
-            cursor = self.log_text.textCursor()
-            cursor.movePosition(QTextCursor.End)
-            self.log_text.setTextCursor(cursor)
+                if last_newline >= 0:
+                    # Keep everything up to the last line break
+                    base_text = current_text[:last_newline]
+                    
+                    # Add the new message with timestamp
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    formatted_message = f"[{timestamp}] {actual_message}"
+                    
+                    # Set the text with the new last line
+                    self.log_text.setPlainText(base_text + '\n' + formatted_message)
+                else:
+                    # Single line text, just replace it entirely
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    formatted_message = f"[{timestamp}] {actual_message}"
+                    self.log_text.setPlainText(formatted_message)
+                
+                # Move cursor to the end
+                cursor = self.log_text.textCursor()
+                cursor.movePosition(QTextCursor.End)
+                self.log_text.setTextCursor(cursor)
+            else:
+                # Handle empty text case - just add as normal
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                formatted_message = f"[{timestamp}] {actual_message}"
+                self.log_text.append(formatted_message)
         else:
             # Regular log message
             timestamp = datetime.now().strftime("%H:%M:%S")
@@ -317,6 +328,16 @@ class ModelGUI(QMainWindow):
                 current_step = self.workflow_state["current_step"]
                 self.workflow_state["steps_completed"] += 1
                 
+                # Disconnect previous worker signals to prevent multiple callbacks
+                if hasattr(self, 'worker'):
+                    try:
+                        self.worker.finished.disconnect()
+                        self.worker.progress.disconnect()
+                        self.worker.message.disconnect()
+                    except TypeError:
+                        # Already disconnected
+                        pass
+                
                 # Move to next step
                 if current_step == "analyze":
                     self.workflow_state["current_step"] = "save_csv"
@@ -344,7 +365,7 @@ class ModelGUI(QMainWindow):
             # Clear workflow state if error
             if hasattr(self, 'workflow_state'):
                 delattr(self, 'workflow_state')
-                
+            
             QMessageBox.critical(self, "Error", message)
 
     def cancel_operation(self):
@@ -431,36 +452,42 @@ class ModelGUI(QMainWindow):
     def save_csv(self):
         """Save .slp files as CSV from multiple directories"""
         output_dirs = self.output_dir_list.toPlainText().splitlines()
+        video_paths = self.video_paths_list.toPlainText().splitlines()
+        base_name = self.output_basename_text.text()
         
         if not output_dirs:
             QMessageBox.warning(self, "Missing Information", "Please specify at least one output directory.")
             return
         
-        # Find all .slp files in the output directories
         slp_files = []
         for output_dir in output_dirs:
             try:
                 if os.path.exists(output_dir):
                     for file in os.listdir(output_dir):
-                        if file.endswith(".slp"):
+                        if file.endswith(".slp") and file.startswith(base_name):
                             slp_files.append(os.path.join(output_dir, file))
             except Exception as e:
                 QMessageBox.warning(self, "Directory Error", f"Could not read directory: {output_dir}\nError: {str(e)}")
                 return
-        
-        if not slp_files:
-            QMessageBox.warning(self, "No SLP Files", f"No .slp files found in any of the specified directories")
+
+        if len(output_dirs) != len(video_paths):
+            QMessageBox.warning(self, "Mismatch", f"There must exist a one-to-one relationship between videos and output directories.")
+            return
+
+        if len(slp_files) != len(output_dirs):
+            QMessageBox.warning(self, "Mismatch", f"Not every directory contains a .slp file with the base name '{base_name}'")
             return
         
-        self.log(f"Saving CSV files...")
+        self.log(f"Saving {len(slp_files)} .slp files...")
         self.log(f"Output directories: {len(output_dirs)} directories")
-        self.log(f"Found {len(slp_files)} .slp files to process")
         
         self.progress_bar.setValue(0)
         
         params = {
             "output_dirs": output_dirs,
-            "slp_files": slp_files
+            "video_paths": video_paths,
+            "slp_files": slp_files,
+            "base_name": self.output_basename_text.text(),
         }
         
         self.worker = Worker("save_csv", params)

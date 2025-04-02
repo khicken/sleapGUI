@@ -38,87 +38,6 @@ class Worker(QThread):
             self.message.emit(traceback.format_exc())
             self.finished.emit(False, str(e))
    
-    def create_video(self):
-        try:
-            output_dirs = self.params["output_dirs"]
-            slp_files = self.params.get("slp_files", [])
-            frame_rate = self.params["frame_rate"]
-            
-            # If no specific slp files provided, scan all directories
-            if not slp_files:
-                for output_dir in output_dirs:
-                    if os.path.exists(output_dir):
-                        for file in os.listdir(output_dir):
-                            if file.endswith(".slp"):
-                                slp_files.append(os.path.join(output_dir, file))
-            
-            self.message.emit(f"Creating videos for {len(slp_files)} .slp files across {len(output_dirs)} directories")
-
-            for i, slp_path in enumerate(slp_files):
-                if self.cancel_requested:
-                    self.message.emit("Analysis cancelled by user")
-                    self.finished.emit(False, "Operation cancelled")
-                    return
-                
-                # Update progress
-                progress = int((i / len(slp_files)) * 100)
-                self.progress.emit(progress)
-                
-                # Create video path by replacing .slp extension with .mp4
-                video_path = os.path.splitext(slp_path)[0] + ".mp4"
-                
-                self.message.emit(f"Rendering video {i+1}/{len(slp_files)}: {os.path.basename(video_path)}")
-                
-                cmd = [
-                    "sleap-render",
-                    "-o", video_path,
-                    "-f", str(frame_rate),
-                    slp_path
-                ]
-                
-                # Execute the command
-                process = subprocess.Popen(
-                    cmd, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    bufsize=1
-                )
-                
-                # For monitoring
-                base_progress = int((i / len(slp_files)) * 100)
-                video_weight = 100 / len(slp_files)
-                def calc_progress(elapsed):
-                    return min(95, elapsed / 60)
-
-                success, error = self.__monitor_process(
-                    process=process,
-                    max_wait_time=7200,  # 2 hours
-                    update_interval=5,
-                    process_description=f"Analyzing video {i+1}/{len(output_dirs)}",
-                    base_progress=base_progress,
-                    progress_weight=video_weight,
-                    progress_calc_func=calc_progress
-                )
-
-                if not success:
-                    self.finished.emit(False, f"Error processing video {i+1}: {os.path.basename(video_path)}\n{error}")
-                    return
-                
-                self.message.emit(f"Successfully created video: {os.path.basename(video_path)}")
-                
-            self.progress.emit(100)
-            
-            if len(slp_files) == 1:
-                self.finished.emit(True, "Video created successfully!")
-            else:
-                self.finished.emit(True, f"All {len(slp_files)} videos created successfully!")
-                
-        except Exception as e:
-            self.message.emit(f"Error: {str(e)}")
-            self.message.emit(traceback.format_exc())
-            self.finished.emit(False, str(e))
-
     def analyze_data(self):
         try:
             model_path = self.params["model_path"]
@@ -211,10 +130,11 @@ class Worker(QThread):
             self.message.emit(traceback.format_exc())
             self.finished.emit(False, str(e))
 
-    def save_csv(self):
+    def create_video(self):
         try:
             output_dirs = self.params["output_dirs"]
             slp_files = self.params.get("slp_files", [])
+            frame_rate = self.params["frame_rate"]
             
             # If no specific slp files provided, scan all directories
             if not slp_files:
@@ -224,20 +144,91 @@ class Worker(QThread):
                             if file.endswith(".slp"):
                                 slp_files.append(os.path.join(output_dir, file))
             
-            self.message.emit(f"Found {len(slp_files)} .slp files to convert to CSV")
-            
-            video_files_by_dir = {}
-            
-            # Find video files in each directory that contains .slp files
-            slp_dirs = set(os.path.dirname(slp) for slp in slp_files)
-            for dir_path in slp_dirs:
-                video_files = []
-                for file in os.listdir(dir_path):
-                    if file.lower().endswith((".avi", ".mp4", ".mov")):
-                        video_files.append(os.path.join(dir_path, file))
-                video_files_by_dir[dir_path] = video_files
-            
+            self.message.emit(f"Creating videos for {len(slp_files)} .slp files across {len(output_dirs)} directories")
+
             for i, slp_path in enumerate(slp_files):
+                if self.cancel_requested:
+                    self.message.emit("Analysis cancelled by user")
+                    self.finished.emit(False, "Operation cancelled")
+                    return
+                
+                # Update progress
+                progress = int((i / len(slp_files)) * 100)
+                self.progress.emit(progress)
+                
+                # Create video path by replacing .slp extension with .mp4
+                video_path = os.path.splitext(slp_path)[0] + ".mp4"
+                
+                self.message.emit(f"Rendering video {i+1}/{len(slp_files)}: {os.path.basename(video_path)}")
+                
+                cmd = [
+                    "sleap-render",
+                    "-o", video_path,
+                    "-f", str(frame_rate),
+                    slp_path
+                ]
+                
+                # Execute the command
+                process = subprocess.Popen(
+                    cmd, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1
+                )
+                
+                # For monitoring
+                base_progress = int((i / len(slp_files)) * 100)
+                video_weight = 100 / len(slp_files)
+                def calc_progress(elapsed):
+                    return min(95, elapsed / 60)
+
+                success, error = self.__monitor_process(
+                    process=process,
+                    max_wait_time=7200,  # 2 hours
+                    update_interval=5,
+                    process_description=f"Analyzing video {i+1}/{len(output_dirs)}",
+                    base_progress=base_progress,
+                    progress_weight=video_weight,
+                    progress_calc_func=calc_progress
+                )
+
+                if not success:
+                    self.finished.emit(False, f"Error processing video {i+1}: {os.path.basename(video_path)}\n{error}")
+                    return
+                
+                self.message.emit(f"Successfully created video: {os.path.basename(video_path)}")
+                
+            self.progress.emit(100)
+            
+            if len(slp_files) == 1:
+                self.finished.emit(True, "Video created successfully!")
+            else:
+                self.finished.emit(True, f"All {len(slp_files)} videos created successfully!")
+                
+        except Exception as e:
+            self.message.emit(f"Error: {str(e)}")
+            self.message.emit(traceback.format_exc())
+            self.finished.emit(False, str(e))
+
+    def save_csv(self):
+        try:
+            output_dirs = self.params["output_dirs"]
+            slp_files = self.params.get("slp_files", [])
+            video_paths = self.params["video_paths"]
+            base_name = self.params["base_name"]
+            
+            # If no specific slp files provided, scan all directories
+            if not slp_files:
+                for output_dir in output_dirs:
+                    if os.path.exists(output_dir):
+                        for file in os.listdir(output_dir):
+                            if file.endswith(".slp"):
+                                slp_files.append(os.path.join(output_dir, file))
+            
+            self.message.emit(f"Converting {len(slp_files)} .slp files to CSV")
+            
+            for i, (video_path, slp_path) in enumerate(zip(video_paths, slp_files)):
                 if self.cancel_requested:
                     self.message.emit("CSV saving cancelled by user")
                     self.finished.emit(False, "Operation cancelled")
@@ -247,68 +238,20 @@ class Worker(QThread):
                 self.progress.emit(progress)
                 
                 try:
-                    # Get directory and file info
                     slp_dir = os.path.dirname(slp_path)
                     slp_basename = os.path.basename(slp_path)
                     slp_base = os.path.splitext(slp_basename)[0]
                     
-                    # Look for matching videos in the same directory as the .slp file
-                    matching_video = None
-                    video_base = None
+                    video_base =  os.path.splitext(os.path.basename(video_path))[0]
                     
-                    if slp_dir in video_files_by_dir:
-                        for video_path in video_files_by_dir[slp_dir]:
-                            video_filename = os.path.basename(video_path)
-                            video_name = os.path.splitext(video_filename)[0]
-                            
-                            # Check if this video name is part of the slp filename
-                            if video_name in slp_base:
-                                matching_video = video_path
-                                video_base = video_name
-                                break
-                    
-                    # If no direct match, try to extract from slp name using base_name pattern
-                    if not matching_video:
-                        # Try to extract video name by splitting on underscore and base_name
-                        video_name = slp_base
-                        basename_parts = self.params.get("base_name", "labels.v001").split('.')
-                        
-                        if len(basename_parts) > 0:
-                            # Look for parts of the base name in the slp filename
-                            for part in basename_parts:
-                                if part in slp_base and len(part) > 2:  # Avoid splitting on small parts
-                                    parts = slp_base.split(part, 1)
-                                    if parts[0]:
-                                        video_name = parts[0].rstrip('_')
-                                        break
-                        
-                        # If we extracted a video name, try to find a matching file
-                        if video_name != slp_base and slp_dir in video_files_by_dir:
-                            for video_path in video_files_by_dir[slp_dir]:
-                                if video_name in os.path.basename(video_path):
-                                    matching_video = video_path
-                                    video_base = video_name
-                                    break
-                    
-                    # Create CSV name in the right format
-                    if matching_video:
-                        video_basename = os.path.basename(matching_video)
-                        video_base = os.path.splitext(video_basename)[0]
-                        self.message.emit(f"Matched SLP with video: {video_basename}")
-                    else:
-                        video_base = video_name
-                        self.message.emit(f"No matching video found for {slp_basename}, using extracted name.")
-                    
-                    # Create CSV name that follows your desired format
-                    csv_name = f"{slp_base}.000_{video_base}.analysis.csv"
-                    # Make sure we don't have double underscores or strange characters
-                    csv_name = csv_name.replace('__', '_').replace('_.', '.')
+                    csv_name = f"{base_name}.000_{video_base}.analysis.csv"
+                    csv_name = csv_name.replace('__', '_').replace('_.', '.').replace('..', '.')
                     csv_path = os.path.join(slp_dir, csv_name)
                     
-                    self.message.emit(f"Converting {os.path.basename(slp_path)} to CSV...")
+                    self.message.emit(f"Converting {slp_basename} to CSV...")
                     labels = sleap.load_file(slp_path)
                     CSVAdaptor.write(csv_path, labels)
-                    self.message.emit(f"Saved CSV: {csv_path}")
+                    self.message.emit(f"Saved CSV: {os.path.basename(csv_path)}")
                 except Exception as e:
                     self.message.emit(f"Error converting {slp_path}: {str(e)}")
                     # Continue with other files
