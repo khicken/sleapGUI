@@ -46,23 +46,24 @@ class ModelGUI(QMainWindow):
         input_layout = QGridLayout()
         
         # Model path with dropdown
-        self.model_path_label = QLabel("Model Path:")
+        self.model_path_label = QLabel("Model Directory:")
         self.model_path_combo = QComboBox()
         self.model_path_combo.setEditable(False)
         self.model_path_combo.setMinimumWidth(300)
         
         # Add default options
         self.model_path_combo.addItem("(No model selected)")
-        self.model_path_combo.addItem("Browse for model...")
+        self.model_path_combo.addItem("Browse for model directory...")
         
-        # Add pretrained models if available
+        # Add existing models if available
         pretrained_models_dir = os.path.join(os.path.dirname(sleap.__file__), "models", "pretrained")
         if os.path.exists(pretrained_models_dir):
-            for file in os.listdir(pretrained_models_dir):
-                # Accept any file that looks like a SLEAP model
-                if file.endswith('.json') or file.endswith('.single_instance') or 'model' in file.lower():
-                    self.model_path_combo.addItem(f"Pretrained: {file}", 
-                                                os.path.join(pretrained_models_dir, file))
+            # Look for model directories
+            for item in os.listdir(pretrained_models_dir):
+                item_path = os.path.join(pretrained_models_dir, item)
+                
+                if os.path.isdir(item_path):
+                    self.model_path_combo.addItem(f"Model: {item}", item_path)
         
         # Load last used model from settings
         self.settings_file = os.path.join(os.path.expanduser("~"), ".sleapgui_settings.json")
@@ -73,24 +74,23 @@ class ModelGUI(QMainWindow):
         
         self.model_path_combo.activated.connect(self.handle_model_selection)
         
-        # Output directory path
-        self.output_dir_label = QLabel("Output Directory:")
-        self.output_dir_text = QLineEdit()
-        self.output_dir_button = QPushButton("Browse...")
-        self.output_dir_button.clicked.connect(lambda: self.browse_directory(self.output_dir_text))
-        
         # Video paths
         self.video_path_label = QLabel("Video Paths:")
         self.video_paths_list = DragDropTextEdit(self)
-        self.video_paths_list.setMaximumHeight(80)
+        self.video_paths_list.setMaximumHeight(100)
 
         video_buttons_layout = QVBoxLayout()
         self.video_path_button = QPushButton("Add Videos...")
         self.video_path_button.clicked.connect(self.add_video_paths)
         self.clear_videos_button = QPushButton("Clear")
-        self.clear_videos_button.clicked.connect(lambda: self.video_paths_list.clear())
+        self.clear_videos_button.clicked.connect(lambda: (self.video_paths_list.clear(), self.output_dir_list.clear()))
         video_buttons_layout.addWidget(self.video_path_button)
         video_buttons_layout.addWidget(self.clear_videos_button)
+
+        # Working directories
+        self.output_dir_label = QLabel(".slp Directories:")
+        self.output_dir_list = QTextEdit()
+        self.output_dir_list.setMaximumHeight(100)
 
         # Frame rate for video creation
         self.frame_rate_label = QLabel("Frame Rate:")
@@ -106,13 +106,13 @@ class ModelGUI(QMainWindow):
         input_layout.addWidget(self.model_path_label, 0, 0)
         input_layout.addWidget(self.model_path_combo, 0, 1)
         
-        input_layout.addWidget(self.output_dir_label, 1, 0)
-        input_layout.addWidget(self.output_dir_text, 1, 1)
-        input_layout.addWidget(self.output_dir_button, 1, 2)
-        
-        input_layout.addWidget(self.video_path_label, 2, 0)
-        input_layout.addWidget(self.video_paths_list, 2, 1)
-        input_layout.addLayout(video_buttons_layout, 2, 2)
+        input_layout.addWidget(self.video_path_label, 1, 0)
+        input_layout.addWidget(self.video_paths_list, 1, 1)
+        input_layout.addLayout(video_buttons_layout, 1, 2)
+
+        input_layout.addWidget(self.output_dir_label, 2, 0)
+        input_layout.addWidget(self.output_dir_list, 2, 1)
+        # input_layout.addWidget(self.output_dir_button, 1, 2)
         
         input_layout.addWidget(self.frame_rate_label, 3, 0)
         input_layout.addWidget(self.frame_rate_spin, 3, 1)
@@ -125,18 +125,18 @@ class ModelGUI(QMainWindow):
         # Action buttons
         action_layout = QHBoxLayout()
         
-        self.analyze_button = QPushButton("Analyze SLEAP Data")
+        self.analyze_button = QPushButton("Create SLEAP Files")
         self.analyze_button.clicked.connect(self.analyze_data)
         
-        self.create_video_button = QPushButton("Create Video")
+        self.create_video_button = QPushButton("Create Videos")
         self.create_video_button.clicked.connect(self.create_video)
         
-        self.save_csv_button = QPushButton("Save as CSV")
+        self.save_csv_button = QPushButton("Create CSV(s)")
         self.save_csv_button.clicked.connect(self.save_csv)
         
-        self.all_in_one_button = QPushButton("Run Complete Workflow")
+        self.all_in_one_button = QPushButton("Run All")
         self.all_in_one_button.clicked.connect(self.run_complete_workflow)
-        self.all_in_one_button.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
+        self.all_in_one_button.setStyleSheet("background-color: #4CAF50; color: white;")
         
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.cancel_operation)
@@ -192,9 +192,36 @@ class ModelGUI(QMainWindow):
                 self.csv_path_text.setText(base_path + ".csv")
     
     def log(self, message):
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        formatted_message = f"[{timestamp}] {message}"
-        self.log_text.append(formatted_message)
+        if message.startswith("UPDATE_LAST_LINE:"):
+            # Extract the actual message
+            actual_message = message[len("UPDATE_LAST_LINE:"):]
+            
+            # Get the current text
+            current_text = self.log_text.toPlainText()
+            
+            # Remove the last line
+            lines = current_text.split('\n')
+            if lines:
+                lines.pop()  # Remove the last line
+                
+            # Add the new message with timestamp
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            formatted_message = f"[{timestamp}] {actual_message}"
+            
+            # Join back and set the text
+            updated_text = '\n'.join(lines) + '\n' + formatted_message
+            self.log_text.setPlainText(updated_text)
+            
+            # Move cursor to the end
+            cursor = self.log_text.textCursor()
+            cursor.movePosition(QTextCursor.End)
+            self.log_text.setTextCursor(cursor)
+        else:
+            # Regular log message
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            formatted_message = f"[{timestamp}] {message}"
+            self.log_text.append(formatted_message)
+        
         self.log_text.ensureCursorVisible()
     
     def browse_directory(self, text_field):
@@ -205,8 +232,8 @@ class ModelGUI(QMainWindow):
 
     def analyze_data(self):
         model_path = self.get_model_path()
-        output_dir = self.output_dir_text.text()
         video_paths = self.video_paths_list.toPlainText().splitlines()
+        output_paths = self.output_dir_list.toPlainText().splitlines()
         base_name = self.output_basename_text.text()
         
         # Validate inputs
@@ -214,22 +241,10 @@ class ModelGUI(QMainWindow):
             QMessageBox.warning(self, "Missing Information", "Please select a model.")
             return
         
-        # Check if model file exists, but don't validate extension
+        # Check if model file exists
         model_valid, model_error = self.check_file_requirements(model_path, True)
         if not model_valid:
             QMessageBox.warning(self, "Invalid Model", model_error)
-            return
-        
-        # Check output directory
-        if not output_dir:
-            QMessageBox.warning(self, "Missing Information", "Please specify an output directory.")
-            return
-        
-        # Create output directory if it doesn't exist
-        try:
-            os.makedirs(output_dir, exist_ok=True)
-        except Exception as e:
-            QMessageBox.warning(self, "Output Directory Error", f"Could not create output directory: {str(e)}")
             return
         
         # Check video paths
@@ -243,13 +258,17 @@ class ModelGUI(QMainWindow):
                 QMessageBox.warning(self, "Invalid Video", f"Problem with video: {video_path}\n{video_error}")
                 return
         
+        # Check output paths
+        if len(output_paths) != len(video_paths):
+            QMessageBox.warning(self, "Invalid Outputs", f"There must exist a one-to-one relationship between videos and output directories.")
+            return
+        
         self.save_settings()
 
-        self.log(f"Starting analysis...")
+        s = '' if len(video_paths) == 1 else 's'
+        self.log(f"Generating {len(video_paths)} .slp file{s}...")
         self.log(f"Model: {model_path}")
-        self.log(f"Output directory: {output_dir}")
         self.log(f"Base name: {base_name}")
-        self.log(f"Videos: {len(video_paths)} file(s)")
         for i, video in enumerate(video_paths, 1):
             self.log(f"  {i}. {video}")
         
@@ -257,9 +276,9 @@ class ModelGUI(QMainWindow):
         
         params = {
             "model_path": model_path,
-            "output_dir": output_dir,
             "base_name": base_name,
             "video_paths": video_paths,
+            "output_dirs": output_paths,
             "mode": self.mode
         }
         
@@ -335,24 +354,6 @@ class ModelGUI(QMainWindow):
                 
             QMessageBox.critical(self, "Error", message)
 
-    def clear_all_fields(self):
-        """Clear all input fields and reset the interface"""
-        # Reset dropdown to first item (no selection)
-        self.model_path_combo.setCurrentIndex(0)
-        
-        # Clear all text fields
-        self.output_dir_text.clear()
-        self.video_paths_list.clear()
-        self.output_basename_text.setText("labels.v001")
-        
-        # Reset frame rate to default
-        self.frame_rate_spin.setValue(120)
-        
-        # Reset progress bar
-        self.progress_bar.setValue(0)
-        
-        self.log("All fields cleared")
-
     def cancel_operation(self):
         """Cancel the current operation"""
         if hasattr(self, 'worker') and self.worker.isRunning():
@@ -385,39 +386,43 @@ class ModelGUI(QMainWindow):
             self.log("Ready for new operation")
             
             # Disable the cancel button since we're not running anything
+            self.cancel_button.setText("Cancel")
             self.cancel_button.setEnabled(False)
 
     def create_video(self):
-        """Create video from .slp files"""
-        output_dir = self.output_dir_text.text()
+        """Create video from .slp files in multiple directories"""
+        output_dirs = self.output_dir_list.toPlainText().splitlines()
         frame_rate = self.frame_rate_spin.value()
         
-        if not output_dir:
-            QMessageBox.warning(self, "Missing Information", "Please specify an output directory.")
+        if not output_dirs:
+            QMessageBox.warning(self, "Missing Information", "Please specify at least one output directory.")
             return
         
-        # Find all .slp files in the output directory
+        # Find all .slp files in the output directories
         slp_files = []
-        try:
-            for file in os.listdir(output_dir):
-                if file.endswith(".slp"):
-                    slp_files.append(os.path.join(output_dir, file))
-        except Exception as e:
-            QMessageBox.warning(self, "Directory Error", f"Could not read directory: {str(e)}")
-            return
+        for output_dir in output_dirs:
+            try:
+                if os.path.exists(output_dir):
+                    for file in os.listdir(output_dir):
+                        if file.endswith(".slp"):
+                            slp_files.append(os.path.join(output_dir, file))
+            except Exception as e:
+                QMessageBox.warning(self, "Directory Error", f"Could not read directory: {output_dir}\nError: {str(e)}")
+                return
         
         if not slp_files:
-            QMessageBox.warning(self, "No SLP Files", f"No .slp files found in {output_dir}")
+            QMessageBox.warning(self, "No SLP Files", f"No .slp files found in any of the specified directories")
             return
         
         self.log(f"Creating videos...")
-        self.log(f"Output directory: {output_dir}")
+        self.log(f"Output directories: {len(output_dirs)} directories")
+        self.log(f"Found {len(slp_files)} .slp files to process")
         self.log(f"Frame rate: {frame_rate}")
         
         self.progress_bar.setValue(0)
         
         params = {
-            "output_dir": output_dir,
+            "output_dirs": output_dirs,
             "slp_files": slp_files,
             "frame_rate": frame_rate
         }
@@ -431,34 +436,37 @@ class ModelGUI(QMainWindow):
         self.disable_buttons()
 
     def save_csv(self):
-        """Save .slp files as CSV"""
-        output_dir = self.output_dir_text.text()
+        """Save .slp files as CSV from multiple directories"""
+        output_dirs = self.output_dir_list.toPlainText().splitlines()
         
-        if not output_dir:
-            QMessageBox.warning(self, "Missing Information", "Please specify an output directory.")
+        if not output_dirs:
+            QMessageBox.warning(self, "Missing Information", "Please specify at least one output directory.")
             return
         
-        # Find all .slp files in the output directory
+        # Find all .slp files in the output directories
         slp_files = []
-        try:
-            for file in os.listdir(output_dir):
-                if file.endswith(".slp"):
-                    slp_files.append(os.path.join(output_dir, file))
-        except Exception as e:
-            QMessageBox.warning(self, "Directory Error", f"Could not read directory: {str(e)}")
-            return
+        for output_dir in output_dirs:
+            try:
+                if os.path.exists(output_dir):
+                    for file in os.listdir(output_dir):
+                        if file.endswith(".slp"):
+                            slp_files.append(os.path.join(output_dir, file))
+            except Exception as e:
+                QMessageBox.warning(self, "Directory Error", f"Could not read directory: {output_dir}\nError: {str(e)}")
+                return
         
         if not slp_files:
-            QMessageBox.warning(self, "No SLP Files", f"No .slp files found in {output_dir}")
+            QMessageBox.warning(self, "No SLP Files", f"No .slp files found in any of the specified directories")
             return
         
         self.log(f"Saving CSV files...")
-        self.log(f"Output directory: {output_dir}")
+        self.log(f"Output directories: {len(output_dirs)} directories")
+        self.log(f"Found {len(slp_files)} .slp files to process")
         
         self.progress_bar.setValue(0)
         
         params = {
-            "output_dir": output_dir,
+            "output_dirs": output_dirs,
             "slp_files": slp_files
         }
         
@@ -527,26 +535,26 @@ class ModelGUI(QMainWindow):
     def handle_model_selection(self, index):
         """Handle selection from the model dropdown"""
         if index == 1:  # Browse option
-            file_path, _ = QFileDialog.getOpenFileName(
-                self, "Open Model File", "", "SLEAP Models (*.*)")
-            if file_path:
+            directory = QFileDialog.getExistingDirectory(
+                self, "Select Model Directory", "")
+            if directory:
                 # Check if this path is already in the dropdown
                 found = False
                 for i in range(self.model_path_combo.count()):
-                    if self.model_path_combo.itemData(i) == file_path:
+                    if self.model_path_combo.itemData(i) == directory:
                         self.model_path_combo.setCurrentIndex(i)
                         found = True
                         break
                 
                 if not found:
-                    # Add the new path
-                    self.model_path_combo.addItem(os.path.basename(file_path), file_path)
+                    # Add the new directory path
+                    self.model_path_combo.addItem(f"Custom: {os.path.basename(directory)}", directory)
                     self.model_path_combo.setCurrentIndex(self.model_path_combo.count() - 1)
         
         # Update the line edit display if needed
         selected_data = self.model_path_combo.currentData()
         if selected_data:
-            self.log(f"Selected model: {selected_data}")
+            self.log(f"Selected model directory: {selected_data}")
 
     def get_model_path(self):
         """Get the current model path"""
@@ -558,7 +566,7 @@ class ModelGUI(QMainWindow):
         return model_path
     
     def check_file_requirements(self, file_path, is_input=True, check_extension=None):
-        """Check if file path meets requirements"""
+        """Check if file path or directory meets requirements"""
         if not file_path:
             return False, "Path cannot be empty"
         
@@ -590,6 +598,7 @@ class ModelGUI(QMainWindow):
                 self, "Select Video Files", "", "Video Files (*.avi *.mp4 *.mov)")
         
         if file_paths:
+            # Update video paths list
             current_text = self.video_paths_list.toPlainText()
             for path in file_paths:
                 if current_text:
@@ -597,11 +606,23 @@ class ModelGUI(QMainWindow):
                 current_text += path
             self.video_paths_list.setText(current_text)
             
-            # If output directory is not specified, suggest one based on first video
-            if not self.output_dir_text.text():
+            # Get all video paths after adding new ones
+            all_video_paths = self.video_paths_list.toPlainText().splitlines()
+            
+            # Create corresponding directory list (one-to-one relationship)
+            dir_paths = []
+            for video_path in all_video_paths:
+                dir_paths.append(os.path.dirname(video_path))
+            
+            # Update the output_dir_list with the directories in the same order as videos
+            self.output_dir_list.setText('\n'.join(dir_paths))
+            
+            # If output_dir_text is not specified, use the directory of the first video
+            if not hasattr(self, 'output_dir_text') or not self.output_dir_text.text():
                 # Use the directory of the first video as output directory
-                video_dir = os.path.dirname(file_paths[0])
-                self.output_dir_text.setText(video_dir)
+                if dir_paths:
+                    if hasattr(self, 'output_dir_text'):
+                        self.output_dir_text.setText(dir_paths[0])
             
             # Set frame rate based on the first/most recent video
             most_recent_video = file_paths[0]
@@ -613,21 +634,14 @@ class ModelGUI(QMainWindow):
                 self.log(f"Could not detect frame rate from {os.path.basename(most_recent_video)}: {str(e)}")
         
     def clear_all_fields(self):
-        # Reset dropdown to first item (no selection)
-        self.model_path_combo.setCurrentIndex(0)
-        
-        self.output_dir_text.clear()
+        self.model_path_combo.setCurrentIndex(0)  # reset dropdown
         self.video_paths_list.clear()
+        self.output_dir_list.clear()
         self.output_basename_text.setText("labels.v001")
-        
         self.frame_rate_spin.setValue(120)
-        
         self.progress_bar.setValue(0)
-        
-        self.log("All fields cleared")
-    
-    def clear_log(self):
         self.log_text.clear()
+        
 
 def main():
     """Main entry point for the sleapGUI application"""

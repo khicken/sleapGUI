@@ -40,18 +40,20 @@ class Worker(QThread):
    
     def create_video(self):
         try:
-            output_dir = self.params["output_dir"]
+            output_dirs = self.params["output_dirs"]
             slp_files = self.params.get("slp_files", [])
             frame_rate = self.params["frame_rate"]
             
-            # If no specific slp files provided, scan the directory
+            # If no specific slp files provided, scan all directories
             if not slp_files:
-                for file in os.listdir(output_dir):
-                    if file.endswith(".slp"):
-                        slp_files.append(os.path.join(output_dir, file))
+                for output_dir in output_dirs:
+                    if os.path.exists(output_dir):
+                        for file in os.listdir(output_dir):
+                            if file.endswith(".slp"):
+                                slp_files.append(os.path.join(output_dir, file))
             
-            self.message.emit(f"Creating videos for {len(slp_files)} .slp files")
-            
+            self.message.emit(f"Creating videos for {len(slp_files)} .slp files across {len(output_dirs)} directories")
+
             for i, slp_path in enumerate(slp_files):
                 if self.cancel_requested:
                     self.message.emit("Analysis cancelled by user")
@@ -83,111 +85,28 @@ class Worker(QThread):
                     bufsize=1
                 )
                 
-                # Monitor process with timeout and progress updates
-                start_time = time.time()
-                max_wait_time = 1800  # 30 minutes max runtime for video rendering
-                update_interval = 5  # Update message every 5 seconds
-                last_update = 0
+                # For monitoring
+                base_progress = int((i / len(slp_files)) * 100)
+                video_weight = 100 / len(slp_files)
+                def calc_progress(elapsed):
+                    return min(95, elapsed / 60)
 
-                # Cross-platform output reading using threads
-                stdout_queue = queue.Queue()
-                stderr_queue = queue.Queue()
+                success, error = self.__monitor_process(
+                    process=process,
+                    max_wait_time=7200,  # 2 hours
+                    update_interval=5,
+                    process_description=f"Analyzing video {i+1}/{len(output_dirs)}",
+                    base_progress=base_progress,
+                    progress_weight=video_weight,
+                    progress_calc_func=calc_progress
+                )
 
-                def read_output(pipe, queue):
-                    for line in iter(pipe.readline, ''):
-                        queue.put(line.strip())
-                    pipe.close()
-
-                # Start threads to read output
-                stdout_thread = threading.Thread(target=read_output, args=(process.stdout, stdout_queue))
-                stderr_thread = threading.Thread(target=read_output, args=(process.stderr, stderr_queue))
-                stdout_thread.daemon = True
-                stderr_thread.daemon = True
-                stdout_thread.start()
-                stderr_thread.start()
-
-                self.progress.emit(20)
-
-                stderr_data = []
-
-                while not process.poll():
-                    if self.cancel_requested:
-                        process.terminate()
-                        time.sleep(0.5)
-                        if process.poll() is None:
-                            process.kill()
-                        self.message.emit("Analysis cancelled by user")
-                        self.finished.emit(False, "Operation cancelled")
-                        return
-
-                    # Check for output without blocking
-                    try:
-                        while True:
-                            line = stdout_queue.get_nowait()
-                            self.message.emit(f"[OUTPUT] {line}")
-                    except queue.Empty:
-                        pass
-                    
-                    try:
-                        while True:
-                            line = stderr_queue.get_nowait()
-                            stderr_data.append(line)
-                            self.message.emit(f"[ERROR] {line}")
-                    except queue.Empty:
-                        pass
-                    
-                    current_time = time.time()
-                    elapsed = int(current_time - start_time)
-                    
-                    # Check for timeout
-                    if elapsed > max_wait_time:
-                        process.terminate()
-                        time.sleep(2)
-                        if process.poll() is None:
-                            try:
-                                process.kill()
-                            except:
-                                pass
-                        self.message.emit("Video creation timed out")
-                        self.finished.emit(False, "Video creation process timed out")
-                        return
-                    
-                    # Update message periodically
-                    if current_time - last_update >= update_interval:
-                        minutes, seconds = divmod(elapsed, 60)
-                        time_str = f"{minutes:02d}:{seconds:02d}"
-                        self.message.emit(f"Rendering video... (Elapsed time: {time_str})")
-                        self.progress.emit(min(80, 20 + int(elapsed / 60)))  # Progress increases with time
-                        last_update = current_time
-                    
-                    time.sleep(0.1)
-                
-                # Remaining output
-                try:
-                    while True:
-                        line = stdout_queue.get_nowait()
-                        self.message.emit(f"[OUTPUT] {line}")
-                except queue.Empty:
-                    pass
-
-                try:
-                    while True:
-                        line = stderr_queue.get_nowait()
-                        stderr_data.append(line)
-                        self.message.emit(f"[ERROR] {line}")
-                except queue.Empty:
-                    pass
-                
-                # Check for errors
-                if process.returncode != 0:
-                    error_message = "\n".join(stderr_data)
-                    self.message.emit(f"Error creating video: {error_message}")
-                    self.finished.emit(False, f"Error creating video: {error_message}")
+                if not success:
+                    self.finished.emit(False, f"Error processing video {i+1}: {os.path.basename(video_path)}\n{error}")
                     return
                 
                 self.message.emit(f"Successfully created video: {os.path.basename(video_path)}")
                 
-            # All videos completed successfully
             self.progress.emit(100)
             
             if len(slp_files) == 1:
@@ -203,13 +122,22 @@ class Worker(QThread):
     def analyze_data(self):
         try:
             model_path = self.params["model_path"]
-            output_dir = self.params["output_dir"]
+            output_dirs = self.params["output_dirs"]  # Now a list of directories
             base_name = self.params["base_name"]
             video_paths = self.params["video_paths"]
             mode = self.params["mode"]
             
-            # Process each video
-            for i, video_path in enumerate(video_paths):
+            # Check if we have matching number of videos and output dirs
+            if len(output_dirs) != len(video_paths):
+                self.message.emit(f"Warning: Number of output directories ({len(output_dirs)}) doesn't match number of videos ({len(video_paths)})")
+                # Either use the first directory for all videos or repeat the last directory
+                if len(output_dirs) < len(video_paths):
+                    output_dirs = output_dirs + [output_dirs[-1]] * (len(video_paths) - len(output_dirs))
+                else:
+                    output_dirs = output_dirs[:len(video_paths)]
+            
+            # Process each video with its corresponding output directory
+            for i, (video_path, output_dir) in enumerate(zip(video_paths, output_dirs)):
                 base_progress = int((i / len(video_paths)) * 100)
                 video_weight = 100 / len(video_paths)
                 self.progress.emit(int(base_progress + 0.05 * video_weight))
@@ -221,11 +149,15 @@ class Worker(QThread):
                     return
                 
                 self.message.emit(f"Processing video {i+1}/{len(video_paths)}: {os.path.basename(video_path)}")
+                self.message.emit(f"Output directory: {output_dir}")
+                
+                # Make sure output directory exists
+                os.makedirs(output_dir, exist_ok=True)
                 
                 # Extract video name without extension for output naming
                 video_name = os.path.splitext(os.path.basename(video_path))[0]
                 
-                # The output .slp path for this video in the main output directory (no subfolders)
+                # The output .slp path for this video
                 slp_output = os.path.join(output_dir, f"{video_name}_{base_name}.slp")
                 
                 kf_node_indices = "0,1,2,3,4,5,6,7,8,9,10,11" if mode=="face" else "0,1,2,3"
@@ -246,113 +178,25 @@ class Worker(QThread):
                     stdout=subprocess.PIPE, 
                     stderr=subprocess.PIPE,
                     text=True,
-                    bufsize=1  # Line buffered
+                    bufsize=1
                 )
                 
-                # The rest of your existing process monitoring code stays the same
-                # Monitor process with timeout and progress updates
-                start_time = time.time()
-                max_wait_time = 7200  # 2 hours max runtime for analysis
-                update_interval = 5  # Update message every 5 seconds
-                last_update = 0
+                def calc_progress(elapsed):
+                    return min(95, elapsed / 60)
 
-                # Cross-platform output reading using threads
-                stdout_queue = queue.Queue()
-                stderr_queue = queue.Queue()
+                success, error = self.__monitor_process(
+                    process=process,
+                    max_wait_time=7200,  # 2 hours
+                    update_interval=5,
+                    process_description=f"Analyzing video {i+1}/{len(video_paths)}",
+                    base_progress=base_progress,
+                    progress_weight=video_weight,
+                    progress_calc_func=calc_progress
+                )
 
-                def read_output(pipe, queue):
-                    for line in iter(pipe.readline, ''):
-                        queue.put(line.strip())
-                    pipe.close()
-
-                # Start threads to read output
-                stdout_thread = threading.Thread(target=read_output, args=(process.stdout, stdout_queue))
-                stderr_thread = threading.Thread(target=read_output, args=(process.stderr, stderr_queue))
-                stdout_thread.daemon = True
-                stderr_thread.daemon = True
-                stdout_thread.start()
-                stderr_thread.start()
-
-                self.progress.emit(20)
-
-                stderr_data = []
-                while process.poll() is None:
-                    if self.cancel_requested:
-                        process.terminate()
-                        time.sleep(0.5)
-                        if process.poll() is None:
-                            process.kill()
-                        self.message.emit("Analysis cancelled by user")
-                        self.finished.emit(False, "Operation cancelled")
-                        return
-                    
-                    try:
-                        while True:
-                            line = stdout_queue.get_nowait()
-                            self.message.emit(f"[OUTPUT] {line}")
-                    except queue.Empty:
-                        pass
-                    
-                    try:
-                        while True:
-                            line = stderr_queue.get_nowait()
-                            stderr_data.append(line)
-                            self.message.emit(f"[ERROR] {line}")
-                    except queue.Empty:
-                        pass
-                    
-                    current_time = time.time()
-                    elapsed = int(current_time - start_time)
-                    
-                    # Check for timeout
-                    if elapsed > max_wait_time:
-                        process.terminate()
-                        time.sleep(2)
-                        if process.poll() is None:
-                            try:
-                                process.kill()
-                            except:
-                                pass
-                        self.message.emit("Video analysis timed out")
-                        self.finished.emit(False, f"Analysis of video {i+1} timed out: {os.path.basename(video_path)}")
-                        return
-                    
-                    # Update message periodically
-                    if current_time - last_update >= update_interval:
-                        minutes, seconds = divmod(elapsed, 60)
-                        time_str = f"{minutes:02d}:{seconds:02d}"
-                        self.message.emit(f"Analyzing video... (Elapsed time: {time_str})")
-                        
-                        # Progress for this video scaled to its portion of the total
-                        # Limit to 95% completion for this video until it's actually done
-                        progress_pct = min(95, elapsed / 60)  # Estimate based on time
-                        video_progress = int(base_progress + (progress_pct / 100) * video_weight)
-                        self.progress.emit(video_progress)
-                        last_update = current_time
-                        
-                    time.sleep(0.1)
-
-                # Get any remaining output
-                try:
-                    while True:
-                        line = stdout_queue.get_nowait()
-                        self.message.emit(f"[OUTPUT] {line}")
-                except queue.Empty:
-                    pass
-
-                try:
-                    while True:
-                        line = stderr_queue.get_nowait()
-                        stderr_data.append(line)
-                        self.message.emit(f"[ERROR] {line}")
-                except queue.Empty:
-                    pass
-                
                 # Check for errors
-                if process.returncode != 0:
-                    error_message = "\n".join(stderr_data)
-                    self.message.emit(f"Error processing video: {error_message}")
-                    self.finished.emit(False, f"Error processing video {i+1}: {os.path.basename(video_path)}")
+                if not success:
+                    self.finished.emit(False, f"Error processing video {i+1}: {os.path.basename(video_path)}\n{error}")
                     return
             
             self.progress.emit(100)
@@ -370,16 +214,16 @@ class Worker(QThread):
 
     def save_csv(self):
         try:
-            output_dir = self.params["output_dir"]
+            output_dirs = self.params["output_dirs"]
             slp_files = self.params.get("slp_files", [])
             
-            # If no specific slp files provided, scan the directory recursively
+            # If no specific slp files provided, scan all directories
             if not slp_files:
-                # Walk through directory and subdirectories
-                for root, dirs, files in os.walk(output_dir):
-                    for file in files:
-                        if file.endswith(".slp"):
-                            slp_files.append(os.path.join(root, file))
+                for output_dir in output_dirs:
+                    if os.path.exists(output_dir):
+                        for file in os.listdir(output_dir):
+                            if file.endswith(".slp"):
+                                slp_files.append(os.path.join(output_dir, file))
             
             self.message.emit(f"Found {len(slp_files)} .slp files to convert to CSV")
             
@@ -478,3 +322,137 @@ class Worker(QThread):
             self.message.emit(f"Error: {str(e)}")
             self.message.emit(traceback.format_exc())
             self.finished.emit(False, str(e))
+    
+    def __monitor_process(self, process, max_wait_time, update_interval, 
+                   process_description, start_time=time.time(), base_progress=0, progress_weight=100,
+                   progress_calc_func=None):
+        """
+        Monitor a subprocess with output capture, progress updates, and timeout handling.
+        
+        Args:
+            process: subprocess.Popen object to monitor
+            start_time: Time when process started
+            max_wait_time: Maximum seconds to allow process to run before timeout
+            update_interval: How often to update status (seconds)
+            process_description: Description for status messages (e.g., "Analyzing video")
+            base_progress: Starting progress percentage
+            progress_weight: Weight of this process in overall progress calculation
+            progress_calc_func: Function to calculate progress (takes elapsed time, returns percentage)
+            
+        Returns:
+            tuple: (success (bool), error_message (str))
+        """
+        # Cross-platform output reading using threads
+        stdout_queue = queue.Queue()
+        stderr_queue = queue.Queue()
+
+        def read_output(pipe, queue):
+            for line in iter(pipe.readline, ''):
+                queue.put(line.strip())
+            pipe.close()
+
+        # Start threads to read output
+        stdout_thread = threading.Thread(target=read_output, args=(process.stdout, stdout_queue))
+        stderr_thread = threading.Thread(target=read_output, args=(process.stderr, stderr_queue))
+        stdout_thread.daemon = True
+        stderr_thread.daemon = True
+        stdout_thread.start()
+        stderr_thread.start()
+
+        self.progress.emit(base_progress)
+
+        stderr_data = []
+        last_update = 0
+        last_progress_message = None
+
+        while process.poll() is None:
+            if self.cancel_requested:
+                process.terminate()
+                time.sleep(0.5)
+                if process.poll() is None:
+                    process.kill()
+                self.message.emit(f"{process_description} cancelled by user")
+                return False, "Operation cancelled"
+            
+            # Process stdout
+            try:
+                while True:
+                    line = stdout_queue.get_nowait()
+                    self.message.emit(f"[OUTPUT] {line}")
+            except queue.Empty:
+                pass
+            
+            # Process stderr
+            try:
+                while True:
+                    line = stderr_queue.get_nowait()
+                    stderr_data.append(line)
+                    self.message.emit(f"[ERROR] {line}")
+            except queue.Empty:
+                pass
+            
+            current_time = time.time()
+            elapsed = int(current_time - start_time)
+            
+            # Check for timeout
+            if elapsed > max_wait_time:
+                process.terminate()
+                time.sleep(2)
+                if process.poll() is None:
+                    try:
+                        process.kill()
+                    except:
+                        pass
+                timeout_msg = f"{process_description} timed out"
+                self.message.emit(timeout_msg)
+                return False, timeout_msg
+            
+            # Update message and progress periodically
+            if current_time - last_update >= update_interval:
+                minutes, seconds = divmod(elapsed, 60)
+                time_str = f"{minutes:02d}:{seconds:02d}"
+                self.message.emit(f"{process_description}... (Elapsed time: {time_str})")
+                progress_message = f"{process_description}... (Elapsed time: {time_str})"
+                
+                # If this is a new progress message, send it normally
+                if last_progress_message is None:
+                    self.message.emit(progress_message)
+                else:
+                    # For updates, send a special signal
+                    self.message.emit(f"UPDATE_LAST_LINE:{progress_message}")
+                
+                last_progress_message = progress_message
+                
+                # Calculate progress
+                if progress_calc_func:
+                    progress_pct = progress_calc_func(elapsed)
+                    scaled_progress = int(base_progress + (progress_pct / 100) * progress_weight)
+                    self.progress.emit(scaled_progress)
+                
+                last_update = current_time
+                
+            time.sleep(0.1)
+
+        # Get any remaining output
+        try:
+            while True:
+                line = stdout_queue.get_nowait()
+                self.message.emit(f"[OUTPUT] {line}")
+        except queue.Empty:
+            pass
+
+        try:
+            while True:
+                line = stderr_queue.get_nowait()
+                stderr_data.append(line)
+                self.message.emit(f"[ERROR] {line}")
+        except queue.Empty:
+            pass
+        
+        # Check for errors
+        if process.returncode != 0:
+            error_message = "\n".join(stderr_data)
+            self.message.emit(f"Error during {process_description.lower()}: {error_message}")
+            return False, error_message
+        
+        return True, ""
