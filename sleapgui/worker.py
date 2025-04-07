@@ -104,7 +104,7 @@ class Worker(QThread):
 
                 success, error = self.__monitor_process(
                     process=process,
-                    max_wait_time=7200,  # 2 hours
+                    max_wait_time=86400,  # 2 hours
                     update_interval=5,
                     process_description=f"Analyzing video {i+1}/{len(video_paths)}",
                     base_progress=base_progress,
