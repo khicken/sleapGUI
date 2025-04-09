@@ -18,6 +18,8 @@ There are currently two types of analysis: `face` and `pupil`.
 
 The default analysis is for `face`. For pupil analysis, run `sleapgui pupil`.
 
+'sleapgui face' works in the same manner as 'sleapgui'.
+
 ## Compatibility
 | Platform | Python Version | SLEAP Version |
 |----------|----------------|---------------|
