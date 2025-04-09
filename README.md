@@ -9,7 +9,7 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 2. Install sleapGUI:
 ```pip install --no-deps git+https://github.com/khicken/sleapGUI.git```
 
-_Note: if updating, run `pip uninstall -y sleapgui` then command 2)_
+_Note: if updating, run ```pip uninstall -y sleapgui``` then command 2)_
 
 ## Usage
 Simply run `sleapgui` in the environment to launch the application.
