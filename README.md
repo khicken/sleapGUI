@@ -15,10 +15,11 @@ _Note: if updating, run `pip uninstall -y sleapgui` then command 2)_
 Simply run `sleapgui` in the environment to launch the application.
 
 There are currently two types of analysis: `face` and `pupil`.
-- `face` uses 12 pose estimation points: 4 for the Eyelids, 2 for the Nose, 2 for the Mouth, and 4 for the Whiskers.
-![face picture is here](./assets/face_picture.png)
-- `pupil` uses 4 pose estimation points: Top, Bottom, Right, and Left.
-![pupil picture is here](./assets/pupil_image.png)
+- `face` uses 12 pose estimation points: 4 for the Eyelids, 2 for the Nose, 2 for the Mouth, and 4 for the Whiskers.  
+  <img src="./assets/face_picture.png" alt="face picture is here" width="400"/>
+- `pupil` uses 4 pose estimation points: Top, Bottom, Right, and Left.  
+  <img src="./assets/pupil_image.png" alt="pupil picture is here" width="400"/>
+
 
   
 The default analysis is for `face`. For pupil analysis, run ```sleapgui pupil```.
