@@ -302,19 +302,250 @@ class ModelGUI(QMainWindow):
         self.disable_buttons()
 
     def run_complete_workflow(self):
-        """Run all three operations in sequence: analyze, save CSV, create video"""
-        self.log("Starting complete workflow...")
+        """Run all three operations in sequence: analyze, save CSV, create video for each video before moving to the next"""
+        # Get and validate inputs
+        model_path = self.get_model_path()
+        video_paths = self.video_paths_list.toPlainText().splitlines()
+        output_paths = self.output_dir_list.toPlainText().splitlines()
+        base_name = self.output_basename_text.text()
+        frame_rate = self.frame_rate_spin.value()
         
-        # Store workflow state
+        # Validate inputs
+        if not model_path or model_path == "Select a model...":
+            QMessageBox.warning(self, "Missing Information", "Please select a model.")
+            return
+        
+        model_valid, model_error = self.check_file_requirements(model_path, True)
+        if not model_valid:
+            QMessageBox.warning(self, "Invalid Model", model_error)
+            return
+        
+        if not video_paths:
+            QMessageBox.warning(self, "Missing Information", "Please add at least one video file.")
+            return
+        
+        for video_path in video_paths:
+            video_valid, video_error = self.check_file_requirements(video_path, True)
+            if not video_valid:
+                QMessageBox.warning(self, "Invalid Video", f"Problem with video: {video_path}\n{video_error}")
+                return
+        
+        if len(output_paths) != len(video_paths):
+            QMessageBox.warning(self, "Invalid Outputs", "There must exist a one-to-one relationship between videos and output directories.")
+            return
+        
+        self.save_settings()
+        
+        # Store workflow state for per-video processing
         self.workflow_state = {
+            "current_video_index": 0,
+            "total_videos": len(video_paths),
+            "video_paths": video_paths,
+            "output_paths": output_paths,
+            "model_path": model_path,
+            "base_name": base_name,
+            "frame_rate": frame_rate,
             "current_step": "analyze",
-            "steps_completed": 0,
-            "total_steps": 3,
             "success": True
         }
         
-        # Start the first step
-        self.analyze_data()
+        self.log(f"Starting complete workflow for {len(video_paths)} videos...")
+        self.log(f"Each video will be fully processed before moving to the next video.")
+        
+        # Process the first video
+        self.process_next_video_step()
+
+    def process_next_video_step(self):
+        """Process the current step for the current video in the workflow"""
+        if not hasattr(self, 'workflow_state'):
+            return
+        
+        video_index = self.workflow_state["current_video_index"]
+        total_videos = self.workflow_state["total_videos"]
+        current_step = self.workflow_state["current_step"]
+        
+        # If we've processed all videos, we're done
+        if video_index >= total_videos:
+            self.log("Complete workflow finished successfully!")
+            QMessageBox.information(self, "Workflow Complete", "All operations completed successfully!")
+            delattr(self, 'workflow_state')
+            self.progress_bar.setValue(100)
+            return
+        
+        # Get the current video and output path
+        video_path = self.workflow_state["video_paths"][video_index]
+        output_path = self.workflow_state["output_paths"][video_index]
+        
+        # Calculate overall progress percentage
+        step_weight = 1/3  # Each step (analyze, CSV, video) is 1/3 of the process
+        video_weight = 1/total_videos  # Each video is 1/total of the whole job
+        steps_completed = 0 if current_step == "analyze" else (1 if current_step == "save_csv" else 2)
+        
+        base_progress = (video_index * 3 + steps_completed) / (total_videos * 3) * 100
+        self.progress_bar.setValue(int(base_progress))
+        
+        # Process the current step for the current video
+        if current_step == "analyze":
+            self.log(f"Video {video_index+1}/{total_videos}: Analyzing...")
+            
+            # Set up parameters for just this video
+            params = {
+                "model_path": self.workflow_state["model_path"],
+                "base_name": self.workflow_state["base_name"],
+                "video_paths": [video_path],
+                "output_dirs": [output_path],
+                "mode": self.mode
+            }
+            
+            self.worker = Worker("analyze", params)
+            
+        elif current_step == "save_csv":
+            self.log(f"Video {video_index+1}/{total_videos}: Creating CSV...")
+            
+            # Find the slp file that was just created
+            slp_files = []
+            base_name = self.workflow_state["base_name"]
+            try:
+                if os.path.exists(output_path):
+                    for file in os.listdir(output_path):
+                        if file.endswith(".slp"):
+                            slp_files.append(os.path.join(output_path, file))
+            except Exception as e:
+                self.log(f"Error finding .slp files: {str(e)}")
+                self.workflow_error(f"Could not find .slp files in {output_path}")
+                return
+                
+            if not slp_files:
+                self.workflow_error(f"No .slp files found in {output_path}")
+                return
+            
+            params = {
+                "output_dirs": [output_path],
+                "video_paths": [video_path],
+                "slp_files": slp_files,
+                "base_name": base_name,
+            }
+            
+            self.worker = Worker("save_csv", params)
+            
+        elif current_step == "create_video":
+            self.log(f"Video {video_index+1}/{total_videos}: Creating visualization video...")
+            
+            # Find all .slp files in the output directory
+            slp_files = []
+            try:
+                if os.path.exists(output_path):
+                    for file in os.listdir(output_path):
+                        if file.endswith(".slp"):
+                            slp_files.append(os.path.join(output_path, file))
+            except Exception as e:
+                self.log(f"Error finding .slp files: {str(e)}")
+                self.workflow_error(f"Could not find .slp files in {output_path}")
+                return
+            
+            if not slp_files:
+                self.workflow_error(f"No .slp files found in {output_path}")
+                return
+            
+            params = {
+                "output_dirs": [output_path],
+                "slp_files": slp_files,
+                "frame_rate": self.workflow_state["frame_rate"]
+            }
+            
+            self.worker = Worker("create_video", params)
+        
+        # Connect signals and start the worker
+        if hasattr(self, 'worker'):
+            self.worker.progress.connect(self.update_workflow_progress)
+            self.worker.message.connect(self.log)
+            self.worker.finished.connect(self.on_video_step_finished)
+            self.worker.start()
+            self.disable_buttons()
+        else:
+            self.workflow_error("Worker initialization failed")
+
+    def update_workflow_progress(self, value):
+        """Update the progress bar for workflow operations"""
+        if hasattr(self, 'workflow_state'):
+            video_index = self.workflow_state["current_video_index"]
+            total_videos = self.workflow_state["total_videos"]
+            current_step = self.workflow_state["current_step"]
+            
+            # Calculate overall progress
+            step_index = 0
+            if current_step == "save_csv":
+                step_index = 1
+            elif current_step == "create_video":
+                step_index = 2
+                
+            # Base progress (completed videos + completed steps)
+            base_progress = (video_index * 3 + step_index) * 100 / (total_videos * 3)
+            
+            # Current step progress weighted to 1/3 of a video's progress
+            step_progress = value / 100 * (100 / (total_videos * 3))
+            
+            # Combined progress
+            total_progress = base_progress + step_progress
+            
+            self.progress_bar.setValue(int(total_progress))
+        else:
+            # Fall back to standard progress update if not in workflow
+            self.progress_bar.setValue(value)
+
+    def on_video_step_finished(self, success, message):
+        """Handle completion of a step in the per-video workflow"""
+        if not hasattr(self, 'workflow_state'):
+            # Not in workflow anymore (maybe cancelled)
+            self.enable_buttons()
+            return
+            
+        if success:
+            current_step = self.workflow_state["current_step"]
+            video_index = self.workflow_state["current_video_index"]
+            total_videos = self.workflow_state["total_videos"]
+            
+            # Disconnect previous worker signals
+            if hasattr(self, 'worker'):
+                try:
+                    self.worker.finished.disconnect()
+                    self.worker.progress.disconnect()
+                    self.worker.message.disconnect()
+                except TypeError:
+                    # Already disconnected
+                    pass
+            
+            # Move to the next step in the workflow
+            if current_step == "analyze":
+                self.workflow_state["current_step"] = "save_csv"
+                self.process_next_video_step()
+            elif current_step == "save_csv":
+                self.workflow_state["current_step"] = "create_video"
+                self.process_next_video_step()
+            elif current_step == "create_video":
+                # This video is complete, move to the next video
+                self.workflow_state["current_video_index"] += 1
+                self.workflow_state["current_step"] = "analyze"
+                self.log(f"Video {video_index+1}/{total_videos} processing complete.")
+                
+                # Process the next video
+                self.process_next_video_step()
+        else:
+            # Error occurred, stop the workflow
+            self.workflow_error(message)
+
+    def workflow_error(self, message):
+        """Handle workflow errors"""
+        self.log(f"Error in workflow: {message}")
+        self.progress_bar.setValue(0)
+        
+        QMessageBox.critical(self, "Workflow Error", 
+                            f"An error occurred during the workflow:\n{message}\n\nWorkflow stopped.")
+        
+        if hasattr(self, 'workflow_state'):
+            delattr(self, 'workflow_state')
+        
+        self.enable_buttons()
 
     def on_task_finished(self, success, message):
         self.enable_buttons()
@@ -464,7 +695,7 @@ class ModelGUI(QMainWindow):
             try:
                 if os.path.exists(output_dir):
                     for file in os.listdir(output_dir):
-                        if file.endswith(".slp") and file.startswith(base_name):
+                        if file.endswith(".slp"):
                             slp_files.append(os.path.join(output_dir, file))
             except Exception as e:
                 QMessageBox.warning(self, "Directory Error", f"Could not read directory: {output_dir}\nError: {str(e)}")
