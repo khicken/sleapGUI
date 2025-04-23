@@ -10,33 +10,52 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 <pre>
 <code>pip install --no-deps git+https://github.com/khicken/sleapGUI.git</code>
 </pre>
-<button onclick="navigator.clipboard.writeText('pip install --no-deps git+https://github.com/khicken/sleapGUI.git')">Copy</button>
+<button onclick="navigator.clipboard.writeText('pip install --no-deps git+https://github.com/khicken/sleapGUI.git')"></button>
 
 - Make sure that [Git](https://git-scm.com/downloads) is downloaded to your computer.
 
-_Note: if updating, run:
+_Note: if updating, run:_
 <pre>
 <code>pip uninstall -y sleapgui</code>
 </pre>
-<button onclick="navigator.clipboard.writeText('pip uninstall -y sleapgui')">Copy</button>
+<button onclick="navigator.clipboard.writeText('pip uninstall -y sleapgui')"></button>
 
-_Then rerun command 2._
+_Then rerun command 2_
 
 
 ## Usage
-Simply run `sleapgui` in the environment to launch the application.
+<p>Simply run:</p>
 
-There are currently two types of analysis: `face` and `pupil`.
-- `face` uses 12 pose estimation points: 4 for the Eyelids, 2 for the Nose, 2 for the Mouth, and 4 for the Whiskers.  
-  <img src="./assets/face_picture.png" alt="face picture is here" width="400"/>
-- `pupil` uses 4 pose estimation points: Top, Bottom, Right, and Left.  
-  <img src="./assets/pupil_image.png" alt="pupil picture is here" width="400"/>
+<pre>
+<code>sleapgui</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('sleapgui')"></button>
 
+<p>There are currently two types of analysis: <code>face</code> and <code>pupil</code>.</p>
 
-  
-The default analysis is for `face`. For pupil analysis, run ```sleapgui pupil```.
+<ul>
+  <li><code>face</code> uses 12 pose estimation points: 4 for the Eyelids, 2 for the Nose, 2 for the Mouth, and 4 for the Whiskers.<br/>
+    <img src="./assets/face_picture.png" alt="face picture is here" width="400"/>
+  </li>
+  <li><code>pupil</code> uses 4 pose estimation points: Top, Bottom, Right, and Left.<br/>
+    <img src="./assets/pupil_image.png" alt="pupil picture is here" width="400"/>
+  </li>
+</ul>
 
-```sleapgui face``` works in the same manner as ```sleapgui```.
+<p>The default analysis is for <code>face</code>. For pupil analysis, run:</p>
+
+<pre>
+<code>sleapgui pupil</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('sleapgui pupil')"></button>
+
+<p><code>sleapgui face</code> works in the same manner as <code>sleapgui</code>. To explicitly use face analysis, run:</p>
+
+<pre>
+<code>sleapgui face</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('sleapgui face')"></button>
+
 
 ## Compatibility
 | Platform | Python Version | SLEAP Version |
