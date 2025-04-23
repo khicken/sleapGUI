@@ -64,6 +64,8 @@ _Then rerun command 2_
 | MacOS  | 3.7 | 1.4.1 |
 | Linux  | 3.7 | 1.4.1 |
 
+The GUIs works well when you analyze multiple videos.
+
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
 
