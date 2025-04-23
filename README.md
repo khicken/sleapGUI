@@ -7,10 +7,21 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 1. Activate the SLEAP environment:
 ```conda activate sleap```
 2. Install sleapGUI:
-```pip install --no-deps git+https://github.com/khicken/sleapGUI.git```
+<pre>
+<code>pip install --no-deps git+https://github.com/khicken/sleapGUI.git</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('pip install --no-deps git+https://github.com/khicken/sleapGUI.git')">Copy</button>
+
 - Make sure that [Git](https://git-scm.com/downloads) is downloaded to your computer.
 
-_Note: if updating, run ```pip uninstall -y sleapgui``` then command 2)_
+_Note: if updating, run:
+<pre>
+<code>pip uninstall -y sleapgui</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('pip uninstall -y sleapgui')">Copy</button>
+
+_Then rerun command 2._
+
 
 ## Usage
 Simply run `sleapgui` in the environment to launch the application.
