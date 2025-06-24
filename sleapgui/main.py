@@ -84,7 +84,10 @@ class ModelGUI(QMainWindow):
         self.video_path_button.clicked.connect(self.add_video_paths)
         self.clear_videos_button = QPushButton("Clear")
         self.clear_videos_button.clicked.connect(lambda: (self.video_paths_list.clear(), self.output_dir_list.clear()))
+        self.remove_selected_button = QPushButton("Remove Selected")
+        self.remove_selected_button.clicked.connect(self.remove_selected_videos)
         video_buttons_layout.addWidget(self.video_path_button)
+        video_buttons_layout.addWidget(self.remove_selected_button)
         video_buttons_layout.addWidget(self.clear_videos_button)
 
         # Working directories
@@ -240,6 +243,40 @@ class ModelGUI(QMainWindow):
         directory = QFileDialog.getExistingDirectory(self, "Select Output Directory", "")
         if directory:
             text_field.setText(directory)
+
+    def remove_selected_videos(self):
+        """Remove selected videos and their corresponding output directories"""
+        # Get the current cursor in the video paths list
+        cursor = self.video_paths_list.textCursor()
+        
+        if not cursor.hasSelection():
+            QMessageBox.information(self, "No Selection", "Please select a video to remove.")
+            return
+            
+        # Get all current videos and output directories
+        all_videos = self.video_paths_list.toPlainText().splitlines()
+        all_outputs = self.output_dir_list.toPlainText().splitlines()
+        
+        # Get the selection
+        selected_text = cursor.selectedText()
+        selected_videos = selected_text.splitlines()
+        
+        # Remove the selected videos and corresponding output directories
+        new_videos = []
+        new_outputs = []
+        
+        for i, video in enumerate(all_videos):
+            if video not in selected_videos:
+                new_videos.append(video)
+                # Only add corresponding output if it exists
+                if i < len(all_outputs):
+                    new_outputs.append(all_outputs[i])
+        
+        # Update the text fields
+        self.video_paths_list.setText('\n'.join(new_videos))
+        self.output_dir_list.setText('\n'.join(new_outputs))
+        
+        self.log(f"Removed {len(selected_videos)} selected video(s)")
 
     def analyze_data(self):
         model_path = self.get_model_path()
