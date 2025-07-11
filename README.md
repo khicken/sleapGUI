@@ -14,7 +14,7 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 
 - Make sure that [Git](https://git-scm.com/downloads) is downloaded to your computer.
 
-_Note: if updating, run:_
+_Note: if updating, run after activating the SLEAP enviornment:_
 <pre>
 <code>pip uninstall -y sleapgui</code>
 </pre>
