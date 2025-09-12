@@ -1,5 +1,5 @@
 # sleapGUI
-GUI application that automates specified commands for SLEAP.
+Create workflows for foundational SLEAP commands.
 
 ## Installation
 This application uses the same Qt bindings as SLEAP, through the QtPy compatibility layer, i.e. must be run in the SLEAP conda environment.
