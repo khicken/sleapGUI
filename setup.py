@@ -16,7 +16,7 @@ if not qtpy_installed:
 
 setup(
     name='sleapgui',
-    version='0.1.0',
+    version='0.1.1',
     author='Kaleb Kim',
     author_email='mail@kalebkim.com',
     description='GUI application that automates specified commands for SLEAP',
