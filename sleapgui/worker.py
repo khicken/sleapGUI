@@ -135,6 +135,7 @@ class Worker(QThread):
             output_dirs = self.params["output_dirs"]
             slp_files = self.params.get("slp_files", [])
             frame_rate = self.params["frame_rate"]
+            video_format = self.params.get("video_format", "mp4")
             
             # If no specific slp files provided, scan all directories
             if not slp_files:
@@ -156,8 +157,8 @@ class Worker(QThread):
                 progress = int((i / len(slp_files)) * 100)
                 self.progress.emit(progress)
                 
-                # Create video path by replacing .slp extension with .mp4
-                video_path = os.path.splitext(slp_path)[0] + ".mp4"
+                # Create video path by replacing .slp extension with chosen format
+                video_path = os.path.splitext(slp_path)[0] + f".{video_format}"
                 
                 self.message.emit(f"Rendering video {i+1}/{len(slp_files)}: {os.path.basename(video_path)}")
                 

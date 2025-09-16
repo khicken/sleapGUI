@@ -100,6 +100,12 @@ class ModelGUI(QMainWindow):
         self.frame_rate_spin = QSpinBox()
         self.frame_rate_spin.setRange(1, 240)
         self.frame_rate_spin.setValue(120)
+
+        # Video format selection
+        self.video_format_label = QLabel("Video Format:")
+        self.video_format_combo = QComboBox()
+        self.video_format_combo.addItems(["MP4", "AVI"])
+        self.video_format_combo.setCurrentText("MP4")
         
         # Output file naming
         self.output_basename_label = QLabel("Output Base Name:")
@@ -119,9 +125,12 @@ class ModelGUI(QMainWindow):
         
         input_layout.addWidget(self.frame_rate_label, 3, 0)
         input_layout.addWidget(self.frame_rate_spin, 3, 1)
-        
-        input_layout.addWidget(self.output_basename_label, 4, 0)
-        input_layout.addWidget(self.output_basename_text, 4, 1)
+
+        input_layout.addWidget(self.video_format_label, 4, 0)
+        input_layout.addWidget(self.video_format_combo, 4, 1)
+
+        input_layout.addWidget(self.output_basename_label, 5, 0)
+        input_layout.addWidget(self.output_basename_text, 5, 1)
         
         input_group.setLayout(input_layout)
         
@@ -346,7 +355,8 @@ class ModelGUI(QMainWindow):
         output_paths = self.output_dir_list.toPlainText().splitlines()
         base_name = self.output_basename_text.text()
         frame_rate = self.frame_rate_spin.value()
-        
+        video_format = self.video_format_combo.currentText().lower()
+
         # Validate inputs
         if not model_path or model_path == "Select a model...":
             QMessageBox.warning(self, "Missing Information", "Please select a model.")
@@ -382,6 +392,7 @@ class ModelGUI(QMainWindow):
             "model_path": model_path,
             "base_name": base_name,
             "frame_rate": frame_rate,
+            "video_format": video_format,
             "current_step": "analyze",
             "success": True
         }
@@ -487,7 +498,8 @@ class ModelGUI(QMainWindow):
             params = {
                 "output_dirs": [output_path],
                 "slp_files": slp_files,
-                "frame_rate": self.workflow_state["frame_rate"]
+                "frame_rate": self.workflow_state["frame_rate"],
+                "video_format": self.workflow_state["video_format"]
             }
             
             self.worker = Worker("create_video", params)
@@ -675,6 +687,7 @@ class ModelGUI(QMainWindow):
         """Create video from .slp files in multiple directories"""
         output_dirs = self.output_dir_list.toPlainText().splitlines()
         frame_rate = self.frame_rate_spin.value()
+        video_format = self.video_format_combo.currentText().lower()
         
         if not output_dirs:
             QMessageBox.warning(self, "Missing Information", "Please specify at least one output directory.")
@@ -706,7 +719,8 @@ class ModelGUI(QMainWindow):
         params = {
             "output_dirs": output_dirs,
             "slp_files": slp_files,
-            "frame_rate": frame_rate
+            "frame_rate": frame_rate,
+            "video_format": video_format
         }
         
         self.worker = Worker("create_video", params)
@@ -916,6 +930,7 @@ class ModelGUI(QMainWindow):
         self.output_dir_list.clear()
         self.output_basename_text.setText("labels.v001")
         self.frame_rate_spin.setValue(120)
+        self.video_format_combo.setCurrentText("MP4")
         self.progress_bar.setValue(0)
         self.log_text.clear()
         
