@@ -13,6 +13,10 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 <button onclick="navigator.clipboard.writeText('pip install --no-deps git+https://github.com/khicken/sleapGUI.git')"></button>
 
 - Make sure that [Git](https://git-scm.com/downloads) is downloaded to your computer.
+- After dowloading Git, in Anaconda path to the directory which has Git/cmd
+  - Ex: "C:\Users\OZDEMIK2\AppData\Local\Programs\Git\cmd"
+  - type "git --version" to confirm the Git Version
+  - Activate sleap and dowload the sleapGUI in this location
 
 _Note: if updating, run after activating the SLEAP enviornment:_
 <pre>
