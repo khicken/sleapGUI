@@ -41,7 +41,9 @@ _Then rerun command 2_
   <li><code>face</code> uses 12 pose estimation points: 4 for the Eyelids, 2 for the Nose, 2 for the Mouth, and 4 for the Whiskers.<br/>
     <img src="./assets/face_picture.png" alt="face picture is here" width="400"/>
   </li>
-  <li><code>face social</code> uses 18 pose estimation points for social interaction tracking.</li>
+  <li><code>face social</code> uses 18 pose estimation points for social interaction tracking. 6 from the right animal (4 whiskers, and 2 nose), and 12 from the left animal (same as in the sleapgui face)</li>
+  <img width="400" height="400" alt="social_interaction" src="https://github.com/user-attachments/assets/b681d5d4-072e-45d9-9aaa-608f1be900e4" />
+
   <li><code>pupil</code> uses 4 pose estimation points: Top, Bottom, Right, and Left.<br/>
     <img src="./assets/pupil_image.png" alt="pupil picture is here" width="400"/>
   </li>
