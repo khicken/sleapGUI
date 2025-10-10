@@ -49,10 +49,10 @@ _Then rerun command 2_
   </li>
 </ul>
 
-<p>The default analysis is for <code>face</code>. To explicitly use face analysis, run:</p>
+<p>The default analysis is for <code>face</code>. To explicitly use face analysis (12 nodes), run:</p>
 
 <pre>
-<code>sleapgui face</code>
+<code>sleapgui face </code>
 </pre>
 <button onclick="navigator.clipboard.writeText('sleapgui face')"></button>
 
@@ -63,7 +63,7 @@ _Then rerun command 2_
 </pre>
 <button onclick="navigator.clipboard.writeText('sleapgui face social')"></button>
 
-<p>For pupil analysis, run:</p>
+<p>For pupil analysi (4 nodes), run:</p>
 
 <pre>
 <code>sleapgui pupil</code>
