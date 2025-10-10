@@ -29,7 +29,9 @@ class ModelGUI(QMainWindow):
     def __init__(self, mode='face'):
         super().__init__()
         self.mode = mode
-        self.setWindowTitle(f"SLEAP: {mode[0].capitalize()}{mode[1:]} Analysis")
+        # Create a nice title from the mode
+        title_mode = mode.replace('_', ' ').title()
+        self.setWindowTitle(f"SLEAP: {title_mode} Analysis")
         self.setMinimumSize(800, 600)
         
         set_app_icon(self)
@@ -938,16 +940,24 @@ class ModelGUI(QMainWindow):
 def main():
     """Main entry point for the sleapGUI application"""
     parser = argparse.ArgumentParser(description="GUI for SLEAP analysis")
-    parser.add_argument('mode', nargs='?', default='face', choices=['face', 'pupil'],
+    parser.add_argument('mode', nargs='?', default='face',
                       help='Analysis mode: "face" for face analysis (default), "pupil" for pupil analysis')
-    
+    parser.add_argument('submode', nargs='?', default=None,
+                      help='Sub-mode: "social" for face social analysis (18 nodes)')
+
     args, _ = parser.parse_known_args()
 
+    # Combine mode and submode
+    if args.submode == 'social' and args.mode == 'face':
+        full_mode = 'face_social'
+    else:
+        full_mode = args.mode
+
     app = QApplication(sys.argv)
-    
-    window = ModelGUI(mode=args.mode)
+
+    window = ModelGUI(mode=full_mode)
     window.show()
-    
+
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

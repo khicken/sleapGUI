@@ -77,8 +77,15 @@ class Worker(QThread):
                 video_name = os.path.splitext(os.path.basename(video_path))[0]
                 
                 slp_output = os.path.join(output_dir, f"{base_name}.slp")
-                
-                kf_node_indices = "0,1,2,3,4,5,6,7,8,9,10,11" if mode=="face" else "0,1,2,3"
+
+                # Determine kf_node_indices based on mode
+                if mode == "face":
+                    kf_node_indices = "0,1,2,3,4,5,6,7,8,9,10,11"
+                elif mode == "face_social":
+                    kf_node_indices = "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17"
+                else:  # pupil
+                    kf_node_indices = "0,1,2,3"
+
                 cmd = [
                     "sleap-track",
                     "-m", model_path,

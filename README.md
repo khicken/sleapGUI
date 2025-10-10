@@ -35,30 +35,38 @@ _Then rerun command 2_
 </pre>
 <button onclick="navigator.clipboard.writeText('sleapgui')"></button>
 
-<p>There are currently two types of analysis: <code>face</code> and <code>pupil</code>.</p>
+<p>There are currently three types of analysis: <code>face</code>, <code>face social</code>, and <code>pupil</code>.</p>
 
 <ul>
   <li><code>face</code> uses 12 pose estimation points: 4 for the Eyelids, 2 for the Nose, 2 for the Mouth, and 4 for the Whiskers.<br/>
     <img src="./assets/face_picture.png" alt="face picture is here" width="400"/>
   </li>
+  <li><code>face social</code> uses 18 pose estimation points for social interaction tracking.</li>
   <li><code>pupil</code> uses 4 pose estimation points: Top, Bottom, Right, and Left.<br/>
     <img src="./assets/pupil_image.png" alt="pupil picture is here" width="400"/>
   </li>
 </ul>
 
-<p>The default analysis is for <code>face</code>. For pupil analysis, run:</p>
-
-<pre>
-<code>sleapgui pupil</code>
-</pre>
-<button onclick="navigator.clipboard.writeText('sleapgui pupil')"></button>
-
-<p><code>sleapgui face</code> works in the same manner as <code>sleapgui</code>. To explicitly use face analysis, run:</p>
+<p>The default analysis is for <code>face</code>. To explicitly use face analysis, run:</p>
 
 <pre>
 <code>sleapgui face</code>
 </pre>
 <button onclick="navigator.clipboard.writeText('sleapgui face')"></button>
+
+<p>For face social analysis (18 nodes), run:</p>
+
+<pre>
+<code>sleapgui face social</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('sleapgui face social')"></button>
+
+<p>For pupil analysis, run:</p>
+
+<pre>
+<code>sleapgui pupil</code>
+</pre>
+<button onclick="navigator.clipboard.writeText('sleapgui pupil')"></button>
 
 
 ## Compatibility
