@@ -1,5 +1,7 @@
 # sleapGUI
-Create workflows for foundational SLEAP commands.
+Create workflows for foundational SLEAP commands using tensorflow version.
+
+Install Tensorflow Version of SLEAP: https://legacy.sleap.ai/installation.html
 
 ## Installation
 This application uses the same Qt bindings as SLEAP, through the QtPy compatibility layer, i.e. must be run in the SLEAP conda environment.
