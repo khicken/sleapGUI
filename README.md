@@ -24,7 +24,7 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 <code>conda activate sleap</code>
 </pre>
 
-3. Install sleapGUI:
+2. Install sleapGUI:
 <pre>
 <code>pip install --no-deps git+https://github.com/khicken/sleapGUI.git</code>
 </pre>
