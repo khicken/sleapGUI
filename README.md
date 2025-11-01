@@ -3,7 +3,7 @@
 ## SLEAP Installation
 Create workflows for foundational SLEAP commands.
 
-1. Install Tensorflow Version of [SLEAP](https://legacy.sleap.ai/installation.html) using [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main): 
+1. Install [SLEAP](https://legacy.sleap.ai/installation.html) using [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main): 
 
 Windows/Linux:
 
