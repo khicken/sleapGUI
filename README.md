@@ -94,9 +94,9 @@ _Then rerun command 2_
 ## Compatibility
 | Platform | Python Version | SLEAP Version |
 |----------|----------------|---------------|
-| Windows  | 3.7 | 1.3.3-1.4.1 |
-| MacOS  | 3.7 | 1.3.3-1.4.1 |
-| Linux  | 3.7 | 1.3.3-1.4.1 |
+| Windows  | 3.7 | 1.4.1 |
+| MacOS  | 3.7 | 1.4.1 |
+| Linux  | 3.7 | 1.4.1 |
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
