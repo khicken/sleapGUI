@@ -1,4 +1,6 @@
 # sleapGUI
+
+## SLEAP Installation
 Create workflows for foundational SLEAP commands using tensorflow version.
 
 1. Install Tensorflow Version of [SLEAP](https://legacy.sleap.ai/installation.html) using [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main): 
@@ -15,7 +17,7 @@ Mac:
 <code>conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1</code>
 </pre>
 
-## sleapGUI Installation after Installing SLEAP
+## sleapGUI Installation
 This application uses the same Qt bindings as SLEAP, through the QtPy compatibility layer, i.e. must be run in the SLEAP conda environment.
 
 1. Activate the SLEAP environment:
