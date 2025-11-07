@@ -5,7 +5,7 @@ Create workflows for foundational SLEAP commands.
 
 1. Install [SLEAP](https://legacy.sleap.ai/installation.html) using [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main): 
 
-Windows/Linux:
+Windows/Linux (NVIDIA GPU Required for Fast Video Analysis):
 
 <pre>
 <code>conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c anaconda sleap=1.4.1</code>
