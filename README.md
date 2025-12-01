@@ -19,23 +19,22 @@ Mac:
 <code>conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1</code>
 </pre>
 
-# While Downloading, Accept the Terms of Service
+  - While Downloading, Accept the Terms of Service
 
-1, Run these commands one at a time.
-<pre>
-<code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main</code>
-</pre>
+  2a. Run the commands one at a time.
+  <pre>
+  <code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main</code>
+  </pre>
 
-<pre>
-<code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r</code>
-</pre>
+  <pre>
+  <code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r</code>
+  </pre>
 
-<pre>
-<code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2</code>
-</pre>
+  <pre>
+  <code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2</code>
+  </pre>
 
-2. Afterwards, redownload SLEAP using the original command depending on your computer type
-
+  2b. Afterwards, redownload SLEAP (Step 2) using the original command depending on your computer type
 
 ## sleapGUI Installation
 This application uses the same Qt bindings as SLEAP, through the QtPy compatibility layer, i.e. must be run in the SLEAP conda environment.
@@ -49,7 +48,10 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 - Make sure that [Git](https://git-scm.com/downloads) is downloaded to your computer.
 - After dowloading Git, in Anaconda path to the directory which has Git/cmd
   - Ex: "C:\Users\OZDEMIK2\AppData\Local\Programs\Git\cmd"
-  - type "git --version" to confirm the Git Version
+  - type <pre>
+  <code>git --version/r</code>
+  </pre>
+  to confirm the Git Version
   - Activate sleap and dowload the sleapGUI in this location
 
 2. Install sleapGUI:
