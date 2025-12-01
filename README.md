@@ -3,7 +3,9 @@
 ## SLEAP Installation
 Create workflows for foundational SLEAP commands.
 
-1. Install [SLEAP](https://legacy.sleap.ai/installation.html) using [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main): 
+1. Install [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main)
+
+2. Install [SLEAP](https://legacy.sleap.ai/installation.html)
 
 Windows/Linux (NVIDIA GPU Required for Fast Video Analysis):
 
@@ -16,6 +18,24 @@ Mac:
 <pre>
 <code>conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1</code>
 </pre>
+
+# While Downloading, Accept the Terms of Service
+
+1, Run these commands one at a time.
+<pre>
+<code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main</code>
+</pre>
+
+<pre>
+<code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r</code>
+</pre>
+
+<pre>
+<code>conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2</code>
+</pre>
+
+2. Afterwards, redownload SLEAP using the original command depending on your computer type
+
 
 ## sleapGUI Installation
 This application uses the same Qt bindings as SLEAP, through the QtPy compatibility layer, i.e. must be run in the SLEAP conda environment.
