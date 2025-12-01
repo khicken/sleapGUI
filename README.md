@@ -47,8 +47,8 @@ This application uses the same Qt bindings as SLEAP, through the QtPy compatibil
 
 - Make sure that [Git](https://git-scm.com/downloads) is downloaded to your computer.
 - After dowloading Git, in Anaconda path to the directory which has Git/cmd
-  - Ex: "C:\Users\OZDEMIK2\AppData\Local\Programs\Git\cmd"
-  - type <pre>
+  - Ex: "C:\Users\OZDEMIK2\AppData\Local\Programs\Git\cmd" ; Type
+  <pre>
   <code>git --version/r</code>
   </pre>
   to confirm the Git Version
