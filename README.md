@@ -4,6 +4,7 @@
 Create workflows for foundational SLEAP commands.
 
 1. Install [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main)
+<img width="100" height="100" alt="image" src="https://github.com/user-attachments/assets/ecf19d27-090e-4ecd-a0ac-a4ad3cbe0c2e" />
 
 2. Install [SLEAP](https://legacy.sleap.ai/installation.html)
 
