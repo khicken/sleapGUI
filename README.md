@@ -1,5 +1,8 @@
 # sleapGUI
 
+<img width="1292" height="912" alt="image" src="https://github.com/user-attachments/assets/1ac1e8f0-25a1-473c-9cd9-8de49c447a42" />
+
+
 ## SLEAP Installation
 Create workflows for foundational SLEAP commands.
 
